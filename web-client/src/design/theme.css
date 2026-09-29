@@ -1,0 +1,325 @@
+
+:root {
+  --space-xs: 4px;
+  --space-s: 8px;
+  --space-m: 12px;
+  --space-l: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
+
+  --radius-field: 14px;
+  --radius-capsule: 999px;
+  --radius-card: 20px;
+  --radius-icon: 12px;
+  --radius-mark: 26px;
+
+  --duration-content: 0.28s;
+  --duration-control: 0.22s;
+  --ease-content: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-control: cubic-bezier(0.25, 0.9, 0.3, 1);
+
+  --tab-bar-height: 64px;
+
+  --accent: #007aff;
+  --accent-soft: rgba(0, 122, 255, 0.14);
+  --screen-background: #f2f2f7;
+  --field-background: #ffffff;
+  --grouped-background: #ffffff;
+  --label: #000000;
+  --label-secondary: rgba(60, 60, 67, 0.6);
+  --label-tertiary: rgba(60, 60, 67, 0.3);
+  --separator: rgba(60, 60, 67, 0.29);
+  --fill-tertiary: rgba(118, 118, 128, 0.12);
+  --fill-quaternary: rgba(116, 116, 128, 0.08);
+  --danger: #ff3b30;
+  --warning: #ff9500;
+  --success: #34c759;
+  --glass: rgba(255, 255, 255, 0.72);
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+    --glass-tint: rgba(255, 255, 255, 0.55);
+  --glass-edge: rgba(255, 255, 255, 0.5);
+  --glass-highlight: rgba(255, 255, 255, 0.75);
+  --glass-highlight-soft: rgba(255, 255, 255, 0.22);
+  --glass-blur: 20px;
+  --glass-saturate: 180%;
+  --glass-aberration-cool: rgba(0, 170, 255, 0.3);
+  --glass-aberration-warm: rgba(255, 70, 180, 0.24);
+  --shadow-glass: 0 6px 24px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-glass-control: 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.08);
+  --accent-glass: rgba(0, 122, 255, 0.82);
+  --danger-glass: rgba(255, 59, 48, 0.82);
+    --glass-neutral: rgba(58, 58, 64, 0.52);
+
+  --palette-red: #ff3b30;
+  --palette-orange: #ff9500;
+  --palette-yellow: #ffcc00;
+  --palette-green: #34c759;
+  --palette-mint: #00c7be;
+  --palette-teal: #30b0c7;
+  --palette-blue: #007aff;
+  --palette-indigo: #5856d6;
+  --palette-purple: #af52de;
+  --palette-pink: #ff2d55;
+  --palette-brown: #a2845e;
+  --palette-graphite: #8e8e93;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #0a84ff;
+    --accent-soft: rgba(10, 132, 255, 0.22);
+    --screen-background: #000000;
+    --field-background: #1c1c1e;
+    --grouped-background: #1c1c1e;
+    --label: #ffffff;
+    --label-secondary: rgba(235, 235, 245, 0.6);
+    --label-tertiary: rgba(235, 235, 245, 0.3);
+    --separator: rgba(84, 84, 88, 0.65);
+    --fill-tertiary: rgba(118, 118, 128, 0.24);
+    --fill-quaternary: rgba(118, 118, 128, 0.18);
+    --danger: #ff453a;
+    --warning: #ff9f0a;
+    --success: #30d158;
+    --glass: rgba(30, 30, 32, 0.72);
+    --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    --glass-tint: rgba(44, 44, 48, 0.55);
+    --glass-edge: rgba(255, 255, 255, 0.14);
+    --glass-highlight: rgba(255, 255, 255, 0.26);
+    --glass-highlight-soft: rgba(255, 255, 255, 0.07);
+    --glass-aberration-cool: rgba(80, 200, 255, 0.24);
+    --glass-aberration-warm: rgba(255, 90, 190, 0.18);
+    --shadow-glass: 0 8px 28px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-glass-control: 0 1px 2px rgba(0, 0, 0, 0.5), 0 5px 14px rgba(0, 0, 0, 0.4);
+    --accent-glass: rgba(10, 132, 255, 0.82);
+    --danger-glass: rgba(255, 69, 58, 0.82);
+    --glass-neutral: rgba(255, 255, 255, 0.13);
+
+    --palette-red: #ff453a;
+    --palette-orange: #ff9f0a;
+    --palette-yellow: #ffd60a;
+    --palette-green: #30d158;
+    --palette-mint: #63e6e2;
+    --palette-teal: #40c8e0;
+    --palette-blue: #0a84ff;
+    --palette-indigo: #5e5ce6;
+    --palette-purple: #bf5af2;
+    --palette-pink: #ff375f;
+    --palette-brown: #ac8e68;
+    --palette-graphite: #98989d;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  background: var(--screen-background);
+  color: var(--label);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.3;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  min-height: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.liquid-glass {
+  position: relative;
+  isolation: isolate;
+  background: var(--glass-tint);
+  border: 1px solid var(--glass-edge);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) contrast(1.05)
+    brightness(1.04);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) contrast(1.05)
+    brightness(1.04);
+  box-shadow: var(--shadow-glass), inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 1px var(--glass-highlight-soft);
+}
+
+.liquid-glass::before,
+.liquid-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.liquid-glass::before {
+  background: linear-gradient(
+    150deg,
+    var(--glass-highlight) 0%,
+    transparent 36%,
+    transparent 64%,
+    var(--glass-highlight-soft) 100%
+  );
+  opacity: 0.55;
+  transition: opacity var(--duration-control) var(--ease-control);
+}
+
+.liquid-glass:active::before {
+  opacity: 0.85;
+}
+
+.liquid-glass::after {
+  box-shadow: inset 0 0 12px 3px var(--glass-highlight-soft),
+    inset 1.5px 1.5px 0 var(--glass-aberration-cool),
+    inset -1.5px -1.5px 0 var(--glass-aberration-warm);
+  opacity: 0.7;
+}
+
+.liquid-glass--control {
+  box-shadow: var(--shadow-glass-control), inset 0 1px 0 var(--glass-highlight);
+}
+
+.liquid-glass--control::after {
+  display: none;
+}
+
+.liquid-glass--control::before {
+  background: linear-gradient(180deg, var(--glass-highlight-soft) 0%, transparent 55%);
+  opacity: 0.6;
+}
+
+.liquid-glass--accent {
+  background: var(--accent-glass);
+  border-color: var(--glass-highlight);
+  color: #fff;
+}
+
+.liquid-glass--danger {
+  background: var(--danger-glass);
+  border-color: var(--glass-highlight);
+  color: #fff;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .liquid-glass {
+    background: var(--glass);
+  }
+
+  .liquid-glass--accent {
+    background: var(--accent);
+  }
+
+  .liquid-glass--danger {
+    background: var(--danger);
+  }
+}
+
+.text-large-title {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+
+.text-title {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.text-title3 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.text-headline {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.text-body {
+  font-size: 17px;
+}
+
+.text-subheadline {
+  font-size: 15px;
+}
+
+.text-footnote {
+  font-size: 13px;
+}
+
+.text-caption {
+  font-size: 12px;
+}
+
+.secondary {
+  color: var(--label-secondary);
+}
+
+.tertiary {
+  color: var(--label-tertiary);
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

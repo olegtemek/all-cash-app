@@ -1,0 +1,83 @@
+@host = http://localhost:8080
+@login = olegtemek
+
+###
+GET {{host}}/health
+
+### Preflight: ответ 200 с Access-Control-Allow-*
+OPTIONS {{host}}/push
+Origin: http://localhost:5173
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type, x-login
+
+###
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "login": "{{login}}"
+}
+
+###
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "login": "{{login}}"
+}
+
+###
+GET {{host}}/pull?since=20&limit=2000
+X-Login: {{login}}
+
+###
+POST {{host}}/push
+Content-Type: application/json
+X-Login: {{login}}
+
+{
+  "accounts": [
+    {
+      "id": "8f14e55f-ea4f-4b1a-9c2d-1a2b3c4d5e6f",
+      "name": "Kaspi Gold test",
+      "currency": "KZT",
+      "initialBalance": "1000.00",
+      "isArchived": false,
+      "isHidden": false,
+      "deletedAt": null
+    }
+  ],
+  "categories": [
+    {
+      "id": "3c6e0a8a-9c15-4e0f-8b2a-7d9e1f2a3b4c",
+      "name": "Тест",
+      "kind": "expense",
+      "symbolName": "cart.fill",
+      "color": "green",
+      "deletedAt": null
+    }
+  ],
+  "operations": [
+    {
+      "id": "1b645381-2473-4a46-9c11-0d1e2f3a4b5c",
+      "date": "2026-09-02T00:00:00.000Z",
+      "createdAt": "2026-09-02T10:14:00.000Z",
+      "kind": "expense",
+      "accountId": "8f14e55f-ea4f-4b1a-9c2d-1a2b3c4d5e6f",
+      "amount": "12.00",
+      "currency": "KZT",
+      "categoryId": "3c6e0a8a-9c15-4e0f-8b2a-7d9e1f2a3b4c",
+      "counterparty": null,
+      "debtDirection": null,
+      "debtId": null,
+      "destinationAccountId": null,
+      "destinationAmount": null,
+      "destinationCurrency": null,
+      "deletedAt": null
+    }
+  ]
+}
+
+###
+GET {{host}}/export/csv
+X-Login: {{login}}

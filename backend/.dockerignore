@@ -1,0 +1,10 @@
+.env
+data/
+*.db
+*.db-wal
+*.db-shm
+.git
+docs/
+*.md
+api.http
+docker-compose.yml
