@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Overview
 
 `all-cash-server` is the sync backend for the `all-cash` personal finance app (clients: the iOS app and the
-web PWA in `../web-client`). It keeps a server-side copy of every user's data, syncs it with the device in both
+web PWA in `../pwa-mobile-client`). It keeps a server-side copy of every user's data, syncs it with the device in both
 directions via a cursor-based protocol, and produces a CSV export. Go + single-file SQLite, no cgo.
 
 The server is designed to run on a LAN only: login is a bare login string with no password, and

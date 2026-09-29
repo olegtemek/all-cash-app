@@ -18,8 +18,8 @@ jobs:
         include:
           - name: all-cash-server
             context: ./server
-          - name: all-cash-web
-            context: ./web-client
+          - name: all-cash-pwa-mobile
+            context: ./pwa-mobile-client
     steps:
       - uses: actions/checkout@v4
 
