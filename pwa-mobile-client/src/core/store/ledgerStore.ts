@@ -506,16 +506,32 @@ export class LedgerStore {
     })
   }
 
+  // Сервер хранит у категории один kind, поэтому категория с двумя типами — две записи.
   async createCategory(
     name: string,
     kinds: CategoryKind[],
     symbolName: string,
     color: PaletteColor
   ): Promise<Category | null> {
+    const created: Category[] = []
+    for (const kind of kinds) {
+      const category = await this.createSingleKindCategory(name, kind, symbolName, color)
+      if (!category) return created[0] ?? null
+      created.push(category)
+    }
+    return created[0] ?? null
+  }
+
+  private async createSingleKindCategory(
+    name: string,
+    kind: CategoryKind,
+    symbolName: string,
+    color: PaletteColor
+  ): Promise<Category | null> {
     const category: Category = {
       id: newUUID(),
       name: name.trim(),
-      kinds: [...kinds],
+      kinds: [kind],
       symbolName,
       color,
       syncState: pendingState,
@@ -548,10 +564,14 @@ export class LedgerStore {
     const index = this.categoryList.findIndex((item) => item.id === categoryID)
     if (index < 0) return null
 
+    const original = this.categoryList[index]!
+    const ownKind = kinds.includes(original.kinds[0]!) ? original.kinds[0]! : kinds[0]!
+    const extraKinds = kinds.filter((kind) => kind !== ownKind)
+
     const updated: Category = {
-      ...this.categoryList[index]!,
+      ...original,
       name: name.trim(),
-      kinds: [...kinds],
+      kinds: [ownKind],
       symbolName,
       color,
       syncState: pendingState
@@ -563,13 +583,17 @@ export class LedgerStore {
 
     try {
       await this.repository.updateCategory(updated)
-      return updated
     } catch (error) {
       this.categoryList = previous
       this.rebuild()
       this.actionError.value = errorMessage(error)
       return null
     }
+
+    for (const kind of extraKinds) {
+      await this.createSingleKindCategory(name, kind, symbolName, color)
+    }
+    return updated
   }
 
   async deleteCategory(categoryID: UUID): Promise<boolean> {
