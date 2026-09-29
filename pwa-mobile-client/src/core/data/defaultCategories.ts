@@ -1,14 +1,18 @@
-import { pendingState, type Category } from '../model/ledger'
+import { pendingState, type Category, type CategoryKind } from '../model/ledger'
 
-export const correctionID = '00000000-0000-0000-0000-00000000c0de'
+// Сервер хранит у категории один kind, поэтому коррекция — две отдельные категории.
+export const correctionIDs: Record<CategoryKind, string> = {
+  expense: '00000000-0000-0000-0000-00000000c0de',
+  income: '00000000-0000-0000-0000-00000000c0df'
+}
 
 export const correctionNames = ['Коррекция', 'Correction']
 
-export function correctionCategory(): Category {
+export function correctionCategory(kind: CategoryKind): Category {
   return {
-    id: correctionID,
+    id: correctionIDs[kind],
     name: 'Коррекция',
-    kinds: ['expense', 'income'],
+    kinds: [kind],
     symbolName: 'arrow.up.arrow.down',
     color: 'graphite',
     syncState: pendingState,

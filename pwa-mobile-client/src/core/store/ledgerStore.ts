@@ -1,5 +1,5 @@
 import { computed, ref, shallowRef, type Ref } from 'vue'
-import { correctionCategory, correctionID, correctionNames } from '../data/defaultCategories'
+import { correctionCategory, correctionIDs, correctionNames } from '../data/defaultCategories'
 import { IndexedDBLedgerRepository } from '../data/idbRepository'
 import type { LedgerRepository } from '../data/repository'
 import {
@@ -132,11 +132,6 @@ export class LedgerStore {
     const last = this.lastUsedAccountID.value
     if (last && this.rawAccounts.some((account) => account.id === last && !account.isArchived)) return last
     return this.selectableAccounts()[0]?.id ?? null
-  })
-
-  readonly correctionCategoryValue = computed(() => {
-    void this.revision.value
-    return LedgerStore.findCorrection(this.categoryList)
   })
 
   debt(id: UUID): DebtSummary | null {
@@ -520,7 +515,7 @@ export class LedgerStore {
     const category: Category = {
       id: newUUID(),
       name: name.trim(),
-      kinds,
+      kinds: [...kinds],
       symbolName,
       color,
       syncState: pendingState,
@@ -556,7 +551,7 @@ export class LedgerStore {
     const updated: Category = {
       ...this.categoryList[index]!,
       name: name.trim(),
-      kinds,
+      kinds: [...kinds],
       symbolName,
       color,
       syncState: pendingState
@@ -661,11 +656,13 @@ export class LedgerStore {
     }
   }
 
-  private static findCorrection(categories: Category[]): Category | null {
+  private static findCorrection(categories: Category[], kind: CategoryKind): Category | null {
     return (
-      categories.find((category) => category.id === correctionID) ??
-      categories.find((category) =>
-        correctionNames.some((name) => category.name.toLowerCase() === name.toLowerCase())
+      categories.find((category) => category.id === correctionIDs[kind]) ??
+      categories.find(
+        (category) =>
+          categoryApplies(category, kind) &&
+          correctionNames.some((name) => category.name.toLowerCase() === name.toLowerCase())
       ) ??
       null
     )
@@ -679,26 +676,24 @@ export class LedgerStore {
     const delta = add(rounded(target), -summary.balance)
     if (delta === 0) return true
 
-    const category = await this.correctionCategoryForWriting()
+    const kind: CategoryKind = delta > 0 ? 'income' : 'expense'
+    const category = await this.correctionCategoryForWriting(kind)
     if (!category) return false
 
     const amount = money(Math.abs(delta), account.currency)
-    const payload: Payload =
-      delta > 0
-        ? { kind: 'income', category: category.id, account: accountID, amount }
-        : { kind: 'expense', category: category.id, account: accountID, amount }
+    const payload: Payload = { kind, category: category.id, account: accountID, amount }
 
     return this.record(date, 'Правка суммы счёта', payload)
   }
 
-  private async correctionCategoryForWriting(): Promise<Category | null> {
-    const existing = this.correctionCategoryValue.value
+  private async correctionCategoryForWriting(kind: CategoryKind): Promise<Category | null> {
+    const existing = LedgerStore.findCorrection(this.categoryList, kind)
     if (existing) return existing
 
-    const restorable = LedgerStore.findCorrection(this.deleted.categories)
+    const restorable = LedgerStore.findCorrection(this.deleted.categories, kind)
     if (restorable) return this.restoreCategory(restorable)
 
-    const category = correctionCategory()
+    const category = correctionCategory(kind)
     const previous = this.categoryList
     this.categoryList = [...this.categoryList, category]
     this.rebuild()
