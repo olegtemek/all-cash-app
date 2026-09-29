@@ -14,6 +14,7 @@ import (
 	_ "modernc.org/sqlite"
 
 	"github.com/olegtemek/all-cash-server/internal/models"
+	"github.com/olegtemek/all-cash-server/migrations"
 )
 
 const timeLayout = time.RFC3339Nano
@@ -34,6 +35,10 @@ func New(path string) (*Repository, error) {
 	if err := db.Ping(); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("repository: ping database: %w", err)
+	}
+	if _, err := db.Exec(migrations.Schema); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("repository: apply schema: %w", err)
 	}
 	return &Repository{db: db}, nil
 }

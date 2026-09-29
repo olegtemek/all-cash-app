@@ -36,23 +36,21 @@ Documentation is written in Russian, matching the rest of the project docs.
 ## Commands
 
 ```sh
-cp ../.env.example ../.env    # .env lives in the repo root; APP_DB_PATH is required, no default
-make migrate            # create/update tables (go run ./cmd/migrate)
+cp ../.env.example ../.env    # .env lives in the repo root; ALL_CASH_APP_DB_PATH is required, no default
 make run                # go run ./cmd/server
 
 go test ./...                                  # all tests
 go test -race ./...
 go test ./internal/usecase -run TestPush         # single test (usecase is the only tested package)
 
-docker compose up -d    # migrate runs to completion, then server; port bound to 127.0.0.1
-BIND_ADDRESS=192.168.1.10 docker compose up -d   # expose to the LAN
+docker compose up -d    # port bound to 127.0.0.1
+ALL_CASH_BIND_ADDRESS=192.168.1.10 docker compose up -d   # expose to the LAN
 go vet ./...
 
-CGO_ENABLED=0 go build -o bin/server  ./cmd/server
-CGO_ENABLED=0 go build -o bin/migrate ./cmd/migrate
+CGO_ENABLED=0 go build -o bin/server ./cmd/server
 ```
 
-`make` (run from `backend/`) includes and exports `../.env` and prefixes a relative `APP_DB_PATH` with `../`, so the local database is the repo-root `data/`, the same one docker compose mounts. The binaries also read `.env` through
+`make` (run from `backend/`) includes and exports `../.env` and prefixes a relative `ALL_CASH_APP_DB_PATH` with `../`, so the local database is the repo-root `data/`, the same one docker compose mounts. The binaries also read `.env` through
 `godotenv/autoload`, but from the *current directory* only, so without `make` run them from the repo
 root or export the variables. Real environment variables win over the file.
 
@@ -60,7 +58,7 @@ Only `internal/usecase` has tests, deliberately (ADR-0001, п. 18): add new cove
 needs a database to test, it is in the wrong layer.
 
 `api.http` holds ready-made requests for every endpoint (note: its `@host` points at port 8080 while
-the default `SERVER_PORT` is 8000).
+the default `ALL_CASH_SERVER_PORT` is 8000).
 
 ## Architecture
 
@@ -72,16 +70,15 @@ Three layers, each depending only on the one below, with the interface declared 
   **The only tested layer**, against a hand-written mock in `mocks_test.go`, no database (ADR-0001, п. 18).
 - `internal/repository` — SQLite. Not covered by tests; verify SQL changes by hand via `api.http`.
 - `internal/models` — shared structs plus the request/response DTO layer; no dependencies on the above.
-- `migrations` — `schema.sql` embedded into the binary via `go:embed`; `cmd/migrate` applies it.
+- `migrations` — `schema.sql` embedded into the binary via `go:embed`; `repository.New` executes it on startup.
 
 Wiring happens in `cmd/server/main.go`: config → repository → usecase → HTTP server.
 
 ### Schema ownership
 
-The server never creates or alters the schema. Only `cmd/migrate` does, applying the whole of
-`migrations/schema.sql` in one transaction. The script is written with `IF NOT EXISTS`, so re-running
-is safe. When you change the schema, edit `schema.sql` and keep it idempotent — there is no
-versioned-migration machinery.
+`repository.New` executes the whole of `migrations/schema.sql` on every startup. The script is written
+with `IF NOT EXISTS`, so re-running is safe, but existing tables are never altered. When you change
+the schema, edit `schema.sql` and keep it idempotent — there is no versioned-migration machinery.
 
 ### The sync cursor (`seq`)
 
@@ -171,6 +168,6 @@ logged.
   Russian. Internal error text wrapped with `fmt.Errorf` and log messages are in English. Test names
   and test failure messages are in Russian.
 - Dependencies are kept to the current short list in `go.mod`. Adding one needs a reason.
-- The SQLite DSN (`busy_timeout`, `journal_mode(WAL)`, `foreign_keys(ON)`) is duplicated in
-  `repository.dsn` and `cmd/migrate`; keep the two in sync.
+- The SQLite DSN (`busy_timeout`, `journal_mode(WAL)`, `foreign_keys(ON)`) is defined in
+  `repository.dsn`.
 - The repo-root `data/all_cash.db*` is a local development database (git-ignored), not fixtures.

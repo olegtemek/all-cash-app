@@ -10,8 +10,8 @@ import (
 )
 
 type Config struct {
-	Server Server `env-prefix:"SERVER_"`
-	App    App    `env-prefix:"APP_"`
+	Server Server `env-prefix:"ALL_CASH_SERVER_"`
+	App    App    `env-prefix:"ALL_CASH_APP_"`
 }
 
 type Server struct {
@@ -34,7 +34,7 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("config: read environment: %w", err)
 	}
 	if cfg.App.DBPath == "" {
-		return Config{}, errors.New("config: APP_DB_PATH is required")
+		return Config{}, errors.New("config: ALL_CASH_APP_DB_PATH is required")
 	}
 	return cfg, nil
 }

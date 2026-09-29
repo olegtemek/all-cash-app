@@ -15,7 +15,7 @@ import (
 )
 
 // maxBodyBytes ограничивает тело запроса на уровне сервера: батч push с потолком
-// APP_PULL_LIMIT укладывается в этот размер с большим запасом.
+// ALL_CASH_APP_PULL_LIMIT укладывается в этот размер с большим запасом.
 const maxBodyBytes = 10 << 20
 
 const healthCheckTimeout = 2 * time.Second

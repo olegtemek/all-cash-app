@@ -33,7 +33,6 @@ cgo, денежные суммы — `shopspring/decimal`. Сторонних з
 
 ```sh
 cp .env.example .env   # значения по умолчанию рабочие
-make migrate           # создать таблицы
 make run               # запустить сервер
 ```
 
@@ -43,14 +42,13 @@ make run               # запустить сервер
 Сборка бинарников:
 
 ```sh
-CGO_ENABLED=0 go build -o bin/server  ./cmd/server
-CGO_ENABLED=0 go build -o bin/migrate ./cmd/migrate
+CGO_ENABLED=0 go build -o bin/server ./cmd/server
 ```
 
 ### Docker Compose
 
 ```sh
-docker compose up -d          # migrate выполняется до server и завершается
+docker compose up -d          # таблицы создаёт server при старте
 docker compose logs -f server
 docker compose down           # каталог data с базой остаётся
 ```
@@ -59,27 +57,27 @@ docker compose down           # каталог data с базой остаётс
 Чтобы его увидели устройства локальной сети, укажите адрес машины:
 
 ```sh
-BIND_ADDRESS=192.168.1.10 docker compose up -d
+ALL_CASH_BIND_ADDRESS=192.168.1.10 docker compose up -d
 ```
 
-Наружу порт не открывать. `SERVER_PORT` задаёт порт и на хосте, и внутри
+Наружу порт не открывать. `ALL_CASH_SERVER_PORT` задаёт порт и на хосте, и внутри
 контейнера.
 
 Настройки Compose берёт из `.env` рядом с `docker-compose.yml` и целиком передаёт
 их в контейнеры (`env_file`): отдельного списка переменных в `docker-compose.yml`
 нет. Без `.env` запуск не состоится.
 
-База лежит в каталоге на хосте — `DATA_DIR` (по умолчанию `./data`), внутри
+База лежит в каталоге на хосте — `ALL_CASH_DATA_DIR` (по умолчанию `./data`), внутри
 контейнера он смонтирован как `./data` относительно рабочего каталога. Файл
 доступен обычными средствами: `sqlite3 ./data/all_cash.db`. `docker compose down`
 данные не трогает; удалить их можно только вручную.
 
 На Linux каталог принадлежит хостовому пользователю, а процесс в контейнере
-работает под uid 10001 — запись не удастся, `migrate` упадёт с `unable to open
+работает под uid 10001 — запись не удастся, `server` упадёт с `unable to open
 database file`. Укажите в `.env` свои идентификаторы:
 
 ```sh
-DOCKER_USER=$(id -u):$(id -g)
+ALL_CASH_DOCKER_USER=$(id -u):$(id -g)
 ```
 
 Не запускайте `make run` и Compose одновременно: это два процесса поверх одного
@@ -91,7 +89,6 @@ DOCKER_USER=$(id -u):$(id -g)
 
 ```sh
 docker build -t all-cash-server .
-docker run --rm --env-file .env -v "$PWD/data:/app/data" all-cash-server migrate
 docker run -d --env-file .env -p 192.168.1.10:8000:8000 -v "$PWD/data:/app/data" all-cash-server
 ```
 
@@ -100,17 +97,10 @@ docker run -d --env-file .env -p 192.168.1.10:8000:8000 -v "$PWD/data:/app/data"
 
 ## Схема базы
 
-Таблицы создаёт команда `migrate`: сервер схему не создаёт и не правит —
-сервер, который сам меняет схему, невозможно откатить.
-
-```sh
-make migrate                    # путь к базе из APP_DB_PATH
-go run ./cmd/migrate -db ../data/all_cash.db   # из backend/
-```
-
-Команда выполняет `migrations/schema.sql` целиком, одной транзакцией. Скрипт
-написан через `IF NOT EXISTS`, поэтому повторный запуск безвреден и данные не
-теряет. SQL вшит в бинарник, каталог `migrations/` при развёртывании не нужен.
+При старте `server` выполняет `migrations/schema.sql` целиком. Скрипт написан через
+`IF NOT EXISTS`, поэтому перезапуск безвреден и данные не теряет. Существующие таблицы
+не изменяются: новый столбец в уже созданной базе нужно добавить вручную. SQL вшит в
+бинарник, каталог `migrations/` при развёртывании не нужен.
 
 ## Заведение пользователей
 
@@ -158,34 +148,34 @@ curl -XPOST http://localhost:8000/auth/register -d '{"login":"oleg"}'
 
 | Переменная | Назначение | По умолчанию |
 | --- | --- | --- |
-| `APP_DB_PATH` | путь к файлу SQLite (относительный — от рабочего каталога) | обязательна |
-| `APP_PULL_LIMIT` | записей в одном ответе `/pull` | `2000` |
-| `APP_LOG_LEVEL` | уровень логирования | `info` |
-| `SERVER_PORT` | порт HTTP | `8000` |
-| `SERVER_READ_TIMEOUT` | таймаут чтения запроса | `30s` |
-| `SERVER_WRITE_TIMEOUT` | таймаут записи ответа | `30s` |
-| `SERVER_SHUTDOWN_TIMEOUT` | ожидание graceful shutdown | `10s` |
+| `ALL_CASH_APP_DB_PATH` | путь к файлу SQLite (относительный — от рабочего каталога) | обязательна |
+| `ALL_CASH_APP_PULL_LIMIT` | записей в одном ответе `/pull` | `2000` |
+| `ALL_CASH_APP_LOG_LEVEL` | уровень логирования | `info` |
+| `ALL_CASH_SERVER_PORT` | порт HTTP | `8000` |
+| `ALL_CASH_SERVER_READ_TIMEOUT` | таймаут чтения запроса | `30s` |
+| `ALL_CASH_SERVER_WRITE_TIMEOUT` | таймаут записи ответа | `30s` |
+| `ALL_CASH_SERVER_SHUTDOWN_TIMEOUT` | ожидание graceful shutdown | `10s` |
 
 Ещё три переменные читает только `docker compose`, приложение их не знает:
 
 | Переменная | Назначение | По умолчанию |
 | --- | --- | --- |
-| `DATA_DIR` | каталог хоста с базой, монтируется в `/app/data` | `./data` |
-| `DOCKER_USER` | пользователь процесса в контейнере | `10001:10001` |
-| `BIND_ADDRESS` | адрес, на котором публикуется порт | `127.0.0.1` |
+| `ALL_CASH_DATA_DIR` | каталог хоста с базой, монтируется в `/app/data` | `./data` |
+| `ALL_CASH_DOCKER_USER` | пользователь процесса в контейнере | `10001:10001` |
+| `ALL_CASH_BIND_ADDRESS` | адрес, на котором публикуется порт | `127.0.0.1` |
 
 Настройки читает `internal/config` через `cleanenv`. Файл `.env` из рабочего
 каталога подхватывается автоматически — импортом `godotenv/autoload`.
 **Заданная переменная окружения перекрывает файл** — в контейнере настройки
 приходят переменными, и файл не должен их затирать. Отсутствие файла ошибкой не
-считается, отсутствие `APP_DB_PATH` валит запуск.
+считается, отсутствие `ALL_CASH_APP_DB_PATH` валит запуск.
 
 ## Резервное копирование
 
 Ежедневно по cron:
 
 ```sh
-sqlite3 $APP_DB_PATH ".backup /backup/all_cash-$(date +%F).db"
+sqlite3 $ALL_CASH_APP_DB_PATH ".backup /backup/all_cash-$(date +%F).db"
 ```
 
 Хранить 30 последних копий. Простое копирование файла без `.backup` запрещено:

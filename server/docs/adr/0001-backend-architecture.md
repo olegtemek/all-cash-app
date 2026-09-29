@@ -35,14 +35,13 @@ transport/http  ->  usecase  ->  repository
 
 - `repository.New` ставит `SetMaxOpenConns(1)`.
 - Последовательность «прочитать `MAX(seq)` — записать строку» внутри транзакции безопасна без дополнительных блокировок.
-- DSN (`busy_timeout`, `journal_mode(WAL)`, `foreign_keys(ON)`) задан в `repository.dsn` и `cmd/migrate`; оба места держать одинаковыми.
+- DSN (`busy_timeout`, `journal_mode(WAL)`, `foreign_keys(ON)`) задан в `repository.dsn`.
 - Запускать одновременно `make run` и контейнер на одном файле не нужно.
 
-### 4. Схему меняет только migrate
+### 4. Схему создаёт server при старте
 
-- `server` схему не создаёт и не меняет.
-- `cmd/migrate` применяет `migrations/schema.sql` (вшит через `go:embed`) одной транзакцией. Скрипт идемпотентен (`IF NOT EXISTS`).
-- Недостающие столбцы существующих таблиц добавляет `addColumnIfMissing` (через `pragma_table_info`) в той же транзакции. Новый столбец описывается дважды: в `schema.sql` и в вызове `addColumnIfMissing`, и обязан иметь `DEFAULT`.
+- `repository.New` выполняет `migrations/schema.sql` (вшит через `go:embed`) при каждом старте. Скрипт идемпотентен (`IF NOT EXISTS`).
+- Существующие таблицы не изменяются: новый столбец в уже созданной базе добавляется вручную.
 - Таблицы версий нет. Переименование, удаление столбца и смена типа не поддерживаются и требуют отдельного ADR.
 
 ### 5. Курсор синхронизации — общий per-user `seq`
@@ -50,7 +49,7 @@ transport/http  ->  usecase  ->  repository
 - Один монотонный `seq` на пользователя для `accounts`, `categories`, `operations`. `repository.nextSeq` считает `MAX(seq) + 1` по объединению трёх таблиц внутри транзакции записи.
 - Курсор двигает только `GET /pull`. `POST /push` его не двигает.
 - `repository.Changes` берёт `limit + 1` строк из каждой таблицы и режет по `limit`-му наименьшему `seq`, чтобы страница не рвалась внутри одного `seq`.
-- `usecase.Pull` подставляет `APP_PULL_LIMIT` вместо пустого `limit` и ограничивает его потолком 5000.
+- `usecase.Pull` подставляет `ALL_CASH_APP_PULL_LIMIT` вместо пустого `limit` и ограничивает его потолком 5000.
 
 ### 6. Составные ключи с `user_id`
 
@@ -92,7 +91,7 @@ transport/http  ->  usecase  ->  repository
 
 - Порт наружу не публикуется. `POST /auth/register` открыт и не защищён.
 - Перед выходом наружу нужны: VPN или список IP или Basic Auth на прокси, закрытие `/auth/register`, HTTPS.
-- Compose привязывает порт к `127.0.0.1`; `BIND_ADDRESS` открывает его локальной сети.
+- Compose привязывает порт к `127.0.0.1`; `ALL_CASH_BIND_ADDRESS` открывает его локальной сети.
 
 ### 13. Деньги и время — строки
 
@@ -108,7 +107,7 @@ transport/http  ->  usecase  ->  repository
 
 ### 15. Настройки: cleanenv и `.env`
 
-- Группы: `APP_` (приложение) и `SERVER_` (HTTP). Обязательна только `APP_DB_PATH`.
+- Группы: `ALL_CASH_APP_` (приложение) и `ALL_CASH_SERVER_` (HTTP). Обязательна только `ALL_CASH_APP_DB_PATH`.
 - Значения по умолчанию заданы в тегах `internal/config`. Файл `.env` читает `godotenv/autoload`; реальная переменная окружения важнее файла.
 - Один файл `.env` в корне репозитория используют `make` (`include ../.env`), `docker compose` (`env_file`) и оба бинарника.
 
@@ -139,10 +138,10 @@ transport/http  ->  usecase  ->  repository
 
 ### 20. Docker и Compose
 
-- Образ в две стадии, `CGO_ENABLED=0`, два статических бинарника (`server`, `migrate`), непривилегированный пользователь `allcash` (uid 10001).
-- `docker-compose.yml` в корне репозитория: разовый `migrate` и `server` (`depends_on: service_completed_successfully`), плюс `web` для веб-клиента. `healthcheck` опрашивает `/health`; `stop_grace_period` 15s больше `SERVER_SHUTDOWN_TIMEOUT`.
-- База лежит в каталоге хоста: `${DATA_DIR:-./data}` смонтирован в `/app/data`; рабочий каталог контейнера `/app`, поэтому относительный `APP_DB_PATH=./data/all_cash.db` верен и на хосте, и в контейнере. Именованных томов нет.
-- `DOCKER_USER` задаёт uid:gid процесса, когда владелец каталога данных на хосте другой.
+- Образ в две стадии, `CGO_ENABLED=0`, статический бинарник `server`, непривилегированный пользователь `allcash` (uid 10001).
+- `docker-compose.yml` в корне репозитория: сервис `server`, плюс `web` для веб-клиента. `healthcheck` опрашивает `/health`; `stop_grace_period` 15s больше `ALL_CASH_SERVER_SHUTDOWN_TIMEOUT`.
+- База лежит в каталоге хоста: `${ALL_CASH_DATA_DIR:-./data}` смонтирован в `/app/data`; рабочий каталог контейнера `/app`, поэтому относительный `ALL_CASH_APP_DB_PATH=./data/all_cash.db` верен и на хосте, и в контейнере. Именованных томов нет.
+- `ALL_CASH_DOCKER_USER` задаёт uid:gid процесса, когда владелец каталога данных на хосте другой.
 
 ### 21. Ограничение тела запроса
 
@@ -157,7 +156,7 @@ transport/http  ->  usecase  ->  repository
 ### 23. CORS для веб-клиента
 
 - Порядок middleware: `RequestID` → `Recoverer` → `logging` → `cors` → `limitBody`.
-- Используется `github.com/go-chi/cors`. Источники — `SERVER_CORS_ORIGINS` (по умолчанию `*`), методы `GET`, `POST`, `OPTIONS`, заголовки `Content-Type` и `X-Login`, `ExposedHeaders` — `Content-Disposition`, `MaxAge` 600 с, `AllowCredentials` `false`.
+- Используется `github.com/go-chi/cors`. Источники — `ALL_CASH_SERVER_CORS_ORIGINS` (по умолчанию `*`), методы `GET`, `POST`, `OPTIONS`, заголовки `Content-Type` и `X-Login`, `ExposedHeaders` — `Content-Disposition`, `MaxAge` 600 с, `AllowCredentials` `false`.
 - Preflight не доходит до `authorize`; ручек `OPTIONS` в роутере нет.
 - CORS не аутентификация: доступ к данным даёт только `X-Login`.
 - Списки методов и заголовков в `middleware.go` с роутером не сверяются: новая ручка с другим методом требует правки вручную.
