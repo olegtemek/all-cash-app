@@ -42,6 +42,7 @@ export interface OperationDTO {
 
 export interface PullResponseDTO {
   nextSeq: number
+  serverSeq?: number
   hasMore: boolean
   accounts: AccountDTO[]
   categories: CategoryDTO[]

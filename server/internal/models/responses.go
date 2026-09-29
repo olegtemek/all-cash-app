@@ -101,6 +101,7 @@ type OperationResponse struct {
 
 type PullResponse struct {
 	NextSeq    int64               `json:"nextSeq"`
+	ServerSeq  int64               `json:"serverSeq"`
 	HasMore    bool                `json:"hasMore"`
 	Accounts   []AccountResponse   `json:"accounts"`
 	Categories []CategoryResponse  `json:"categories"`
@@ -113,9 +114,10 @@ type PushResponse struct {
 	FinishedAt string            `json:"finishedAt"`
 }
 
-func NewPullResponse(changes Changes, nextSeq int64) PullResponse {
+func NewPullResponse(changes Changes, nextSeq, serverSeq int64) PullResponse {
 	response := PullResponse{
 		NextSeq:    nextSeq,
+		ServerSeq:  serverSeq,
 		HasMore:    changes.HasMore,
 		Accounts:   make([]AccountResponse, 0, len(changes.Accounts)),
 		Categories: make([]CategoryResponse, 0, len(changes.Categories)),

@@ -55,6 +55,7 @@ type Repository interface {
 	SaveOperation(ctx context.Context, userID string, operation models.Operation) (int64, error)
 
 	Changes(ctx context.Context, userID string, since int64, limit int) (models.Changes, error)
+	MaxSeq(ctx context.Context, userID string) (int64, error)
 
 	LiveOperations(ctx context.Context, userID string) ([]models.Operation, error)
 	AccountNames(ctx context.Context, userID string) (map[string]string, error)
@@ -87,8 +88,9 @@ type PushInput struct {
 }
 
 type PullOutput struct {
-	Changes models.Changes
-	NextSeq int64
+	Changes   models.Changes
+	NextSeq   int64
+	ServerSeq int64
 }
 
 func (u *Usecase) Login(ctx context.Context, login string) (models.User, error) {
@@ -150,7 +152,12 @@ func (u *Usecase) Pull(ctx context.Context, userID string, since int64, limit in
 	if max := changes.MaxSeq(); max > 0 {
 		nextSeq = max
 	}
-	return PullOutput{Changes: changes, NextSeq: nextSeq}, nil
+
+	serverSeq, err := u.repo.MaxSeq(ctx, userID)
+	if err != nil {
+		return PullOutput{}, err
+	}
+	return PullOutput{Changes: changes, NextSeq: nextSeq, ServerSeq: serverSeq}, nil
 }
 
 func (u *Usecase) Push(ctx context.Context, userID string, input PushInput) (models.PushResult, error) {

@@ -118,6 +118,7 @@ func TestAuthenticateUnknownLogin(t *testing.T) {
 func TestPullPassesUserFromSession(t *testing.T) {
 	var seenUser string
 	repo := &repoMock{
+		maxSeqFn: func(context.Context, string) (int64, error) { return 0, nil },
 		changesFn: func(_ context.Context, userID string, _ int64, _ int) (models.Changes, error) {
 			seenUser = userID
 			return models.Changes{}, nil
@@ -132,6 +133,7 @@ func TestPullPassesUserFromSession(t *testing.T) {
 
 func TestPullEmptyKeepsCursor(t *testing.T) {
 	repo := &repoMock{
+		maxSeqFn: func(context.Context, string) (int64, error) { return 0, nil },
 		changesFn: func(context.Context, string, int64, int) (models.Changes, error) {
 			return models.Changes{}, nil
 		},
@@ -146,6 +148,7 @@ func TestPullEmptyKeepsCursor(t *testing.T) {
 
 func TestPullNextSeqIsMaxOfPage(t *testing.T) {
 	repo := &repoMock{
+		maxSeqFn: func(context.Context, string) (int64, error) { return 0, nil },
 		changesFn: func(context.Context, string, int64, int) (models.Changes, error) {
 			return models.Changes{
 				Accounts:   []models.Account{{ID: accountID, Seq: 124}},
@@ -165,6 +168,7 @@ func TestPullNextSeqIsMaxOfPage(t *testing.T) {
 func TestPullLimitClampedToCeiling(t *testing.T) {
 	var seenLimit int
 	repo := &repoMock{
+		maxSeqFn: func(context.Context, string) (int64, error) { return 0, nil },
 		changesFn: func(_ context.Context, _ string, _ int64, limit int) (models.Changes, error) {
 			seenLimit = limit
 			return models.Changes{}, nil
@@ -179,6 +183,24 @@ func TestPullLimitClampedToCeiling(t *testing.T) {
 	_, err = uc.Pull(context.Background(), userOleg, 0, 0)
 	require.NoError(t, err)
 	require.Equal(t, 2000, seenLimit)
+}
+
+func TestPullReturnsServerSeq(t *testing.T) {
+	repo := &repoMock{
+		changesFn: func(context.Context, string, int64, int) (models.Changes, error) {
+			return models.Changes{}, nil
+		},
+		maxSeqFn: func(_ context.Context, userID string) (int64, error) {
+			require.Equal(t, userOleg, userID)
+			return 42, nil
+		},
+	}
+	uc := newUsecase(t, repo)
+
+	output, err := uc.Pull(context.Background(), userOleg, 100, 0)
+	require.NoError(t, err)
+	require.Equal(t, int64(42), output.ServerSeq)
+	require.Equal(t, int64(100), output.NextSeq)
 }
 
 func pushRepo(seq *int64) *repoMock {

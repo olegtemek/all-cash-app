@@ -118,10 +118,18 @@ export class SyncStore {
 
   private async pull(ledger: LedgerStore, session: UserSession): Promise<void> {
     let pages = 0
+    let didResetCursor = false
 
     while (pages < maxPages) {
       const page = await pullPage(this.lastSeq.value, session)
       pages += 1
+
+      // Local cursor ahead of the server: cursor is stale, pull everything again.
+      if (!didResetCursor && page.serverSeq !== null && this.lastSeq.value > page.serverSeq) {
+        didResetCursor = true
+        this.resetCursor()
+        continue
+      }
 
       await ledger.applyPulled(page)
 

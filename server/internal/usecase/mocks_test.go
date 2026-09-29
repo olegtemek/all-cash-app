@@ -26,6 +26,7 @@ type repoMock struct {
 	saveCategoryFn  func(ctx context.Context, userID string, category models.Category) (int64, error)
 	saveOperationFn func(ctx context.Context, userID string, operation models.Operation) (int64, error)
 
+	maxSeqFn  func(ctx context.Context, userID string) (int64, error)
 	changesFn func(ctx context.Context, userID string, since int64, limit int) (models.Changes, error)
 
 	liveOperationsFn     func(ctx context.Context, userID string) ([]models.Operation, error)
@@ -115,6 +116,13 @@ func (m *repoMock) Changes(ctx context.Context, userID string, since int64, limi
 		m.unexpected("Changes")
 	}
 	return m.changesFn(ctx, userID, since, limit)
+}
+
+func (m *repoMock) MaxSeq(ctx context.Context, userID string) (int64, error) {
+	if m.maxSeqFn == nil {
+		m.unexpected("MaxSeq")
+	}
+	return m.maxSeqFn(ctx, userID)
 }
 
 func (m *repoMock) LiveOperations(ctx context.Context, userID string) ([]models.Operation, error) {

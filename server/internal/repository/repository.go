@@ -257,6 +257,19 @@ func nextSeq(ctx context.Context, tx *sql.Tx, userID string) (int64, error) {
 	return seq, nil
 }
 
+func (r *Repository) MaxSeq(ctx context.Context, userID string) (int64, error) {
+	const query = `SELECT COALESCE(MAX(seq), 0) FROM (
+		SELECT seq FROM accounts   WHERE user_id = ?
+		UNION ALL SELECT seq FROM categories WHERE user_id = ?
+		UNION ALL SELECT seq FROM operations WHERE user_id = ?
+	)`
+	var seq int64
+	if err := r.db.QueryRowContext(ctx, query, userID, userID, userID).Scan(&seq); err != nil {
+		return 0, fmt.Errorf("repository: select max seq: %w", err)
+	}
+	return seq, nil
+}
+
 func (r *Repository) Changes(ctx context.Context, userID string, since int64, limit int) (models.Changes, error) {
 	var changes models.Changes
 	fetch := limit + 1

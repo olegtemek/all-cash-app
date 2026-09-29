@@ -572,6 +572,30 @@ export class LedgerStore {
     }
   }
 
+  async deleteCategory(categoryID: UUID): Promise<boolean> {
+    const target = this.categoryList.find((item) => item.id === categoryID)
+    if (!target) return false
+
+    const date = new Date().toISOString()
+    const previousLive = this.categoryList
+    const previousDeleted = this.deleted.categories
+
+    this.categoryList = this.categoryList.filter((item) => item.id !== categoryID)
+    this.deleted.categories = [...this.deleted.categories, { ...target, deletedAt: date, syncState: pendingState }]
+    this.rebuild()
+
+    try {
+      await this.repository.markCategoryDeleted(categoryID, date)
+      return true
+    } catch (error) {
+      this.categoryList = previousLive
+      this.deleted.categories = previousDeleted
+      this.rebuild()
+      this.actionError.value = errorMessage(error)
+      return false
+    }
+  }
+
   async createAccount(
     name: string,
     currency: CurrencyCode,

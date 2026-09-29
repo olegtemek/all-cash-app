@@ -231,6 +231,7 @@ export function pullPageFromDTO(dto: PullResponseDTO): PullPage {
       .map(operationFromDTO)
       .filter((item): item is MoneyOperation => item !== null),
     nextSeq: dto.nextSeq,
+    serverSeq: dto.serverSeq ?? null,
     hasMore: dto.hasMore
   }
 }

@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import AppButton from '@/design/AppButton.vue'
 import AppIcon from '@/design/AppIcon.vue'
+import ConfirmDialog from '@/design/ConfirmDialog.vue'
 import CategoryBadge from '@/design/CategoryBadge.vue'
 import FieldRow from '@/design/FieldRow.vue'
 import FormCard from '@/design/FormCard.vue'
@@ -26,6 +27,7 @@ const color = ref<PaletteColor>(edited.value?.color ?? 'blue')
 const error = ref<CategoryError | null>(null)
 const isSaving = ref(false)
 const isTyping = ref(false)
+const isConfirmingDeletion = ref(false)
 
 const title = computed(() => (edited.value ? 'Категория' : 'Новая категория'))
 const submitTitle = computed(() => (edited.value ? 'Сохранить' : 'Создать'))
@@ -52,6 +54,17 @@ function toggleKind(kind: CategoryKind): void {
     ? kinds.value.filter((item) => item !== kind)
     : [...kinds.value, kind]
   error.value = null
+}
+
+async function confirmDeletion(): Promise<void> {
+  const current = edited.value
+  isConfirmingDeletion.value = false
+  if (!current) return
+
+  isSaving.value = true
+  const isDeleted = await store.deleteCategory(current.id)
+  isSaving.value = false
+  if (isDeleted) emit('close')
 }
 
 async function submit(): Promise<void> {
@@ -178,9 +191,31 @@ async function submit(): Promise<void> {
     </div>
 
     <template #bottom>
-      <AppButton full-width :disabled="isSaving || !hasChanges" @click="submit">{{ submitTitle }}</AppButton>
+      <div class="form__actions">
+        <AppButton full-width :disabled="isSaving || !hasChanges" @click="submit">{{ submitTitle }}</AppButton>
+
+        <AppButton
+          v-if="edited"
+          variant="glass"
+          tone="danger"
+          full-width
+          :disabled="isSaving"
+          @click="isConfirmingDeletion = true"
+        >
+          <AppIcon name="trash" :size="18" />
+          Удалить
+        </AppButton>
+      </div>
     </template>
   </SheetView>
+
+  <ConfirmDialog
+    :open="isConfirmingDeletion"
+    title="Удалить категорию?"
+    message="Записанные операции останутся, но будут показаны без категории."
+    @confirm="confirmDeletion"
+    @cancel="isConfirmingDeletion = false"
+  />
 </template>
 
 <style scoped>
@@ -265,6 +300,11 @@ async function submit(): Promise<void> {
   margin: 0 auto;
   border-radius: 50%;
   color: #fff;
+}
+
+.form__actions {
+  display: flex;
+  gap: var(--space-m);
 }
 
 .form__notes {

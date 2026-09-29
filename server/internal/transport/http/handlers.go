@@ -171,7 +171,7 @@ func (s *Server) handlePull(w http.ResponseWriter, r *http.Request) {
 		count := output.Changes.Total()
 		entry.Records = &count
 	}
-	respond(w, http.StatusOK, models.NewPullResponse(output.Changes, output.NextSeq))
+	respond(w, http.StatusOK, models.NewPullResponse(output.Changes, output.NextSeq, output.ServerSeq))
 }
 
 func (s *Server) handlePush(w http.ResponseWriter, r *http.Request) {

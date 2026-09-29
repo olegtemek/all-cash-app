@@ -6,6 +6,7 @@ export interface PullPage {
   categories: Category[]
   operations: MoneyOperation[]
   nextSeq: number
+  serverSeq: number | null
   hasMore: boolean
 }
 
