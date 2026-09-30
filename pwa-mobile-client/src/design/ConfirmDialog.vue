@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 withDefaults(
   defineProps<{
     open: boolean
@@ -8,7 +9,7 @@ withDefaults(
     cancelTitle?: string
     destructive?: boolean
   }>(),
-  { confirmTitle: 'Удалить', cancelTitle: 'Отмена', destructive: true }
+  { confirmTitle: t('common.delete'), cancelTitle: t('common.cancel'), destructive: true }
 )
 
 const emit = defineEmits<{ confirm: []; cancel: [] }>()

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, ref } from 'vue'
 import AppButton from '@/design/AppButton.vue'
 import AppIcon from '@/design/AppIcon.vue'
@@ -41,10 +42,10 @@ const error = ref<AccountError | null>(null)
 const isSaving = ref(false)
 const isTyping = ref(false)
 
-const title = computed(() => (edited.value ? 'Счёт' : 'Новый счёт'))
-const submitTitle = computed(() => (edited.value ? 'Сохранить' : 'Создать'))
+const title = computed(() => (edited.value ? t('acc.title') : t('acc.new')))
+const submitTitle = computed(() => (edited.value ? t('common.save') : t('common.create')))
 
-const balanceFieldTitle = computed(() => (edited.value ? 'Сумма на счёте' : 'Начальный остаток'))
+const balanceFieldTitle = computed(() => (edited.value ? t('acc.balanceNow') : t('acc.initial')))
 
 const isEditingBalance = computed(() => !isTyping.value && !isHidden.value)
 
@@ -142,13 +143,13 @@ async function submit(): Promise<void> {
 <template>
   <SheetView :open="true" :title="title" @close="emit('close')">
     <div class="form">
-      <FormCard title="Счёт">
+      <FormCard :title="t('acc.title')">
         <FieldRow symbol="textformat" :is-active="isTyping">
           <input
             v-model="name"
             class="form__input"
             type="text"
-            placeholder="Например, Kaspi Gold"
+            :placeholder="t('acc.namePlaceholder')"
             @focus="isTyping = true"
             @blur="isTyping = false"
             @input="error = null"
@@ -158,11 +159,11 @@ async function submit(): Promise<void> {
         <FormDivider />
 
         <FieldRow symbol="coloncurrencysign.circle">
-          <span :class="{ secondary: isCurrencyLocked }">Валюта</span>
+          <span :class="{ secondary: isCurrencyLocked }">{{ t('common.currency') }}</span>
           <select
             v-model="currency"
             class="form__select"
-            aria-label="Валюта"
+            :aria-label="t('common.currency')"
             :disabled="isCurrencyLocked"
             @focus="isTyping = true"
             @blur="isTyping = false"
@@ -193,15 +194,15 @@ async function submit(): Promise<void> {
 
         <FieldRow :symbol="isHidden ? 'eye.slash' : 'eye'">
           <label class="form__toggle">
-            <span>Скрывать баланс</span>
+            <span>{{ t('acc.hideBalance') }}</span>
             <input v-model="isHidden" type="checkbox" class="form__switch" />
           </label>
         </FieldRow>
       </FormCard>
 
-      <FormCard v-if="currentBalance !== null" title="Баланс">
+      <FormCard v-if="currentBalance !== null" :title="t('acc.balance')">
         <FieldRow symbol="equal.circle">
-          <span>Сейчас</span>
+          <span>{{ t('acc.now') }}</span>
           <span class="form__value secondary numeric">
             {{ isHidden ? hiddenBalanceTitle : formatBalance(currentBalance, currency) }}
           </span>
@@ -210,7 +211,7 @@ async function submit(): Promise<void> {
         <template v-if="correctionMoney && !isHidden">
           <FormDivider />
           <FieldRow symbol="arrow.up.arrow.down.circle">
-            <span>Коррекция</span>
+            <span>{{ t('acc.correction') }}</span>
             <span class="form__value form__value--active numeric">
               {{ formatMoney(correctionMoney, correctionDirection) }}
             </span>
@@ -221,28 +222,6 @@ async function submit(): Promise<void> {
       <div class="form__notes">
         <InlineMessage v-if="error" kind="error" :text="accountErrorText(error)" />
 
-        <InlineMessage
-          v-if="isCurrencyLocked"
-          kind="info"
-          text="Валюту сменить нельзя: по счёту уже есть операции, а их суммы хранятся в ней и ни во что не пересчитываются."
-        />
-        <InlineMessage
-          v-else
-          kind="info"
-          text="Валюта задаётся один раз: суммы по счёту хранятся только в ней и ни с чем не складываются."
-        />
-
-        <InlineMessage
-          v-if="isHidden"
-          kind="info"
-          text="Баланс этого счёта не показывается в списке счетов, а сумма не правится. Снимите переключатель, чтобы увидеть её снова."
-        />
-
-        <InlineMessage
-          v-if="edited"
-          kind="info"
-          text="Баланс считается из операций, поэтому разница уйдёт записью в категорию «Коррекция» — записанные операции останутся на месте."
-        />
       </div>
     </div>
 

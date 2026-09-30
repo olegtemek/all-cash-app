@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, onMounted, ref } from 'vue'
 import AppButton from '@/design/AppButton.vue'
 import AppIcon from '@/design/AppIcon.vue'
@@ -22,9 +23,9 @@ import {
 } from '@/core/store/models'
 import type { Account } from '@/core/model/ledger'
 
-const archiveActions: SwipeAction[] = [{ id: 'archive', title: 'В архив', symbol: 'archivebox', tone: 'warning' }]
+const archiveActions: SwipeAction[] = [{ id: 'archive', title: t('acc.archive'), symbol: 'archivebox', tone: 'warning' }]
 const restoreActions: SwipeAction[] = [
-  { id: 'restore', title: 'Вернуть', symbol: 'tray.and.arrow.up', tone: 'accent' }
+  { id: 'restore', title: t('acc.restore'), symbol: 'tray.and.arrow.up', tone: 'accent' }
 ]
 
 const isCreatingAccount = ref(false)
@@ -43,13 +44,13 @@ const editedBalance = computed(() => {
 })
 
 function subtitle(account: AccountSummary): string {
-  if (account.isArchived) return `В архиве · ${account.currencyName}`
-  if (account.isHidden) return `Баланс скрыт · ${account.currencyName}`
+  if (account.isArchived) return t('acc.inArchive', { currency: account.currencyName })
+  if (account.isHidden) return t('acc.balanceHiddenSub', { currency: account.currencyName })
   return account.currencyName
 }
 
 function debtLabel(debt: DebtSummary): string {
-  return `${debt.counterparty}, ${debtStateTitle(debt)}, остаток ${spokenBalance(debt.outstanding.amount, debt.outstanding.currency)}`
+  return t('a11y.debtRow', { name: debt.counterparty, state: debtStateTitle(debt), balance: spokenBalance(debt.outstanding.amount, debt.outstanding.currency) })
 }
 
 onMounted(() => {
@@ -59,9 +60,9 @@ onMounted(() => {
 
 <template>
   <div class="screen">
-    <ScreenHeader title="Счета">
+    <ScreenHeader :title="t('tabs.accounts')">
       <template #trailing>
-        <AppButton variant="glass" class="screen__action" @click="isCreatingAccount = true">Новый счёт</AppButton>
+        <AppButton variant="glass" class="screen__action" @click="isCreatingAccount = true">{{ t('acc.new') }}</AppButton>
       </template>
     </ScreenHeader>
 
@@ -69,29 +70,28 @@ onMounted(() => {
 
     <EmptyState
       v-else-if="phase.kind === 'failed'"
-      title="Счета не открылись"
+      :title="t('acc.failedOpen')"
       symbol="exclamationmark.triangle"
       :description="phase.message"
     >
       <template #actions>
-        <AppButton @click="store.load()">Повторить</AppButton>
+        <AppButton @click="store.load()">{{ t('common.retry') }}</AppButton>
       </template>
     </EmptyState>
 
     <EmptyState
       v-else-if="!store.hasAccounts.value"
-      title="Счетов пока нет"
+      :title="t('acc.none')"
       symbol="creditcard"
-      description="Создайте счёт, чтобы записывать по нему операции."
     >
       <template #actions>
-        <AppButton @click="isCreatingAccount = true">Создать счёт</AppButton>
+        <AppButton @click="isCreatingAccount = true">{{ t('acc.create') }}</AppButton>
       </template>
     </EmptyState>
 
     <div v-else class="list">
       <section class="list__section">
-        <h2 class="list__title text-subheadline">Счета</h2>
+        <h2 class="list__title text-subheadline">{{ t('tabs.accounts') }}</h2>
 
         <div class="list__card">
           <SwipeRow
@@ -116,7 +116,7 @@ onMounted(() => {
       </section>
 
       <section v-if="store.owedToUser.value.length > 0" class="list__section">
-        <h2 class="list__title text-subheadline">Мне должны</h2>
+        <h2 class="list__title text-subheadline">{{ t('debt.owedToMe') }}</h2>
         <div class="list__card">
           <button
             v-for="debt in store.owedToUser.value"
@@ -138,7 +138,7 @@ onMounted(() => {
             <span class="debt__amounts">
               <span class="numeric">{{ formatBalance(debt.outstanding.amount, debt.outstanding.currency) }}</span>
               <span v-if="debt.repayments.length > 0" class="text-footnote secondary numeric">
-                из {{ formatBalance(debt.principal.amount, debt.principal.currency) }}
+                {{ t('acc.of', { amount: formatBalance(debt.principal.amount, debt.principal.currency) }) }}
               </span>
             </span>
           </button>
@@ -146,7 +146,7 @@ onMounted(() => {
       </section>
 
       <section v-if="store.owedByUser.value.length > 0" class="list__section">
-        <h2 class="list__title text-subheadline">Я должен</h2>
+        <h2 class="list__title text-subheadline">{{ t('debt.iOwe') }}</h2>
         <div class="list__card">
           <button
             v-for="debt in store.owedByUser.value"
@@ -168,7 +168,7 @@ onMounted(() => {
             <span class="debt__amounts">
               <span class="numeric">{{ formatBalance(debt.outstanding.amount, debt.outstanding.currency) }}</span>
               <span v-if="debt.repayments.length > 0" class="text-footnote secondary numeric">
-                из {{ formatBalance(debt.principal.amount, debt.principal.currency) }}
+                {{ t('acc.of', { amount: formatBalance(debt.principal.amount, debt.principal.currency) }) }}
               </span>
             </span>
           </button>
@@ -176,7 +176,7 @@ onMounted(() => {
       </section>
 
       <section v-if="archived.length > 0" class="list__section">
-        <h2 class="list__title text-subheadline">Архив</h2>
+        <h2 class="list__title text-subheadline">{{ t('acc.archiveTitle') }}</h2>
 
         <div class="list__card">
           <SwipeRow
@@ -198,10 +198,6 @@ onMounted(() => {
             </div>
           </SwipeRow>
         </div>
-
-        <p class="list__footer text-footnote secondary">
-          Архивный счёт не предлагается в новых операциях, его записи остаются в ленте.
-        </p>
       </section>
     </div>
 
@@ -218,10 +214,10 @@ onMounted(() => {
 
     <ConfirmDialog
       :open="actionError !== null"
-      title="Не получилось"
+      :title="t('acc.failed')"
       :message="actionError ?? ''"
-      confirm-title="Понятно"
-      cancel-title="Закрыть"
+      :confirm-title="t('common.gotIt')"
+      :cancel-title="t('common.close')"
       :destructive="false"
       @confirm="actionError = null"
       @cancel="actionError = null"

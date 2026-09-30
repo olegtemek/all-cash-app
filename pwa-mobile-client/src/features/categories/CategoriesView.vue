@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, onMounted, ref } from 'vue'
 import AppButton from '@/design/AppButton.vue'
 import AppIcon from '@/design/AppIcon.vue'
@@ -32,12 +33,11 @@ onMounted(() => {
   <div class="screen">
     <EmptyState
       v-if="store.allCategories.value.length === 0"
-      title="Категорий пока нет"
+      :title="t('cat.none')"
       symbol="tag"
-      description="Создайте первую — она появится при записи операции."
     >
       <template #actions>
-        <AppButton @click="isCreating = true">Новая категория</AppButton>
+        <AppButton @click="isCreating = true">{{ t('common.newCategory') }}</AppButton>
       </template>
     </EmptyState>
 
@@ -63,7 +63,7 @@ onMounted(() => {
 
       <AppButton variant="glass" full-width @click="isCreating = true">
         <AppIcon name="plus" :size="18" />
-        Новая категория
+        {{ t('common.newCategory') }}
       </AppButton>
     </div>
 

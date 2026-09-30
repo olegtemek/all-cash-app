@@ -1,71 +1,50 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import AppIcon from '@/design/AppIcon.vue'
+import { t } from '@/core/i18n'
+import { ref } from 'vue'
 import FieldRow from '@/design/FieldRow.vue'
 import FormCard from '@/design/FormCard.vue'
 import FormDivider from '@/design/FormDivider.vue'
 import InlineMessage from '@/design/InlineMessage.vue'
 import SpinnerDot from '@/design/SpinnerDot.vue'
-import { authStore as auth } from '@/features/auth/authStore'
 import { exportStore as store } from './exportStore'
-import { formatFileSize, shortDateTime } from '@/core/model/dates'
 
-const isConnected = computed(() => auth.serverStatus.value.kind === 'available')
+const input = ref<HTMLInputElement | null>(null)
 
-const canRequest = computed(() => !store.isLoading.value && isConnected.value && auth.session.value !== null)
-
-const file = computed(() => store.file.value)
-
-const fileDetails = computed(() => {
-  const current = file.value
-  if (!current) return ''
-  return `${current.name} · ${formatFileSize(current.size)} · ${shortDateTime(new Date(current.receivedAt))}`
-})
+async function picked(event: Event): Promise<void> {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  target.value = ''
+  if (file) await store.importBackup(file)
+}
 </script>
 
 <template>
   <div class="card">
-    <FormCard title="Выгрузка данных">
-      <FieldRow
-        symbol="square.and.arrow.down"
-        as="button"
-        :is-active="canRequest"
-        :disabled="!canRequest"
-        @click="store.export(auth.session.value)"
-      >
-        <span :class="canRequest ? 'card__accent' : 'secondary'">
-          {{ file ? 'Обновить выгрузку' : 'Выгрузить в CSV' }}
-        </span>
-        <span v-if="store.isLoading.value" class="card__trailing">
+    <FormCard :title="t('export.title')">
+      <FieldRow symbol="square.and.arrow.down" as="button" @click="store.exportBackup()">
+        <span class="card__accent">{{ t('export.backup') }}</span>
+      </FieldRow>
+
+      <FormDivider />
+
+      <FieldRow symbol="square.and.arrow.up" as="button" :disabled="store.isBusy.value" @click="input?.click()">
+        <span :class="store.isBusy.value ? 'secondary' : 'card__accent'">{{ t('export.import') }}</span>
+        <span v-if="store.isBusy.value" class="card__trailing">
           <SpinnerDot />
         </span>
       </FieldRow>
 
-      <template v-if="file">
-        <FormDivider />
+      <FormDivider />
 
-        <a class="card__download" :href="file.url" :download="file.name">
-          <FieldRow symbol="square.and.arrow.up">
-            <span class="card__file">
-              <span class="card__accent">Скачать файл</span>
-              <span class="text-footnote secondary">{{ fileDetails }}</span>
-            </span>
-          </FieldRow>
-        </a>
-
-        <FormDivider />
-
-        <FieldRow symbol="trash" as="button" @click="store.discardFile()">
-          <span class="card__danger">Удалить выгрузку</span>
-          <template #accessory>
-            <AppIcon name="xmark" :size="14" />
-          </template>
-        </FieldRow>
-      </template>
+      <FieldRow symbol="square.and.arrow.down" as="button" @click="store.exportCSV()">
+        <span class="card__accent">{{ t('export.csv') }}</span>
+      </FieldRow>
     </FormCard>
 
+    <input ref="input" class="card__input" type="file" accept=".json,application/json" @change="picked" />
+
     <InlineMessage v-if="store.error.value" kind="error" :text="store.error.value" />
-    <InlineMessage v-else kind="info" text="Файл со всеми операциями в формате CSV готовит сервер" />
+    <InlineMessage v-else-if="store.message.value" kind="info" :text="store.message.value" />
   </div>
 </template>
 
@@ -80,29 +59,11 @@ const fileDetails = computed(() => {
   color: var(--accent);
 }
 
-.card__danger {
-  color: var(--danger);
-}
-
 .card__trailing {
   margin-left: auto;
 }
 
-.card__file {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.card__file > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.card__download {
-  display: block;
-  color: inherit;
+.card__input {
+  display: none;
 }
 </style>

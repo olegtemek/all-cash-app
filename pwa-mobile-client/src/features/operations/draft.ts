@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import { AmountExpression, type AmountKey } from '@/core/model/amountExpression'
 import type { CategoryKind, DebtDirection, MoneyOperation, UUID } from '@/core/model/ledger'
 
@@ -8,11 +9,11 @@ export const operationFormKinds: OperationFormKind[] = ['entry', 'debt', 'transf
 export function formKindTitle(kind: OperationFormKind): string {
   switch (kind) {
     case 'entry':
-      return 'Расход/доход'
+      return t('form.kind.entry')
     case 'debt':
-      return 'Долг'
+      return t('common.debt')
     case 'transfer':
-      return 'Перевод'
+      return t('common.transfer')
   }
 }
 
@@ -119,9 +120,9 @@ export function draftDiffers(left: OperationDraft, right: OperationDraft): boole
 export type OperationFormMode = { kind: 'creating' } | { kind: 'editing'; id: UUID }
 
 export function modeTitle(mode: OperationFormMode): string {
-  return mode.kind === 'editing' ? 'Изменение операции' : 'Новая операция'
+  return mode.kind === 'editing' ? t('form.editOperation') : t('form.newOperation')
 }
 
 export function modeFailureTitle(mode: OperationFormMode): string {
-  return mode.kind === 'editing' ? 'Не удалось сохранить' : 'Не удалось записать'
+  return mode.kind === 'editing' ? t('form.saveFailed') : t('form.recordFailed')
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, ref, watch } from 'vue'
 import { paletteVar } from '@/core/model/palette'
 import { shareTitle, spendingTotalTitle, type CategorySpending } from '@/core/model/analytics'
@@ -87,7 +88,7 @@ const accessibilityLabel = computed(() => {
     .slice(0, 3)
     .map((item) => `${item.name} ${shareTitle(item.share)}`)
     .join(', ')
-  return `Доли категорий: ${leaders}`
+  return t('an.shares', { leaders })
 })
 </script>
 

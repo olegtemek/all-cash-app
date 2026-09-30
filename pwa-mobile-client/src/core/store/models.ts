@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import { entriesWording } from '../model/analytics'
 import { dayTitle, fullDate } from '../model/dates'
 import {
@@ -40,8 +41,8 @@ export function accountBalanceTitle(account: AccountSummary): string {
 }
 
 export function accountAccessibilityLabel(account: AccountSummary): string {
-  if (account.isHidden) return `${account.name}, ${account.currencyName}, баланс скрыт`
-  return `${account.name}, ${account.currencyName}, баланс ${spokenBalance(account.balance, account.currency)}`
+  if (account.isHidden) return t('a11y.balanceHidden', { name: account.name, currency: account.currencyName })
+  return t('a11y.balance', { name: account.name, currency: account.currencyName, balance: spokenBalance(account.balance, account.currency) })
 }
 
 export interface DebtTranche {
@@ -75,11 +76,11 @@ export function isDebtAggregated(debt: DebtSummary): boolean {
 }
 
 export function debtDirectionTitle(direction: DebtDirection): string {
-  return direction === 'given' ? 'Мне должны' : 'Я должен'
+  return direction === 'given' ? t('debt.owedToMe') : t('debt.iOwe')
 }
 
 export function debtStateTitle(debt: DebtSummary): string {
-  const state = isDebtClosed(debt) ? 'Закрыт' : debt.repayments.length === 0 ? 'Открыт' : 'Частично погашен'
+  const state = isDebtClosed(debt) ? t('debt.closed') : debt.repayments.length === 0 ? t('debt.open') : t('debt.partlyRepaid')
   if (!isDebtAggregated(debt)) return state
   return `${state} · ${entriesWording(debt.tranches.length)}`
 }
@@ -149,8 +150,8 @@ export function makeRowModel(
         ...base,
         symbolName: category?.symbolName ?? 'questionmark.circle',
         tint: category?.color ?? 'graphite',
-        typeLabel: isExpense ? 'Расход' : 'Доход',
-        title: category?.name ?? 'Без категории',
+        typeLabel: isExpense ? t('common.expense') : t('common.income'),
+        title: category?.name ?? t('common.noCategory'),
         subtitle: operation.note,
         amounts: [rowAmount(payload.amount, isExpense ? 'outgoing' : 'incoming')],
         isEditable: true
@@ -163,8 +164,8 @@ export function makeRowModel(
         ...base,
         symbolName: isGiven ? 'person.crop.circle.badge.minus' : 'person.crop.circle.badge.plus',
         tint: isGiven ? 'orange' : 'blue',
-        typeLabel: 'Долг',
-        title: isGiven ? 'Дал в долг' : 'Взял в долг',
+        typeLabel: t('common.debt'),
+        title: isGiven ? t('debt.gave') : t('debt.took'),
         subtitle: joined(payload.counterparty, operation.note),
         amounts: [rowAmount(payload.amount, isGiven ? 'outgoing' : 'incoming')],
         isEditable: true
@@ -177,8 +178,8 @@ export function makeRowModel(
         ...base,
         symbolName: 'arrow.uturn.backward.circle.fill',
         tint: isGiven ? 'green' : 'orange',
-        typeLabel: 'Погашение долга',
-        title: isGiven ? 'Вернули долг' : 'Вернул долг',
+        typeLabel: t('debt.repaymentType'),
+        title: isGiven ? t('debt.gaveBack') : t('debt.tookBack'),
         subtitle: joined(debtOrigin?.counterparty, operation.note),
         amounts: [rowAmount(payload.amount, isGiven ? 'incoming' : 'outgoing')],
         isEditable: false
@@ -186,13 +187,13 @@ export function makeRowModel(
     }
 
     case 'transfer': {
-      const route = `${accounts.get(payload.from)?.name ?? 'Счёт'} → ${accounts.get(payload.to)?.name ?? 'Счёт'}`
+      const route = `${accounts.get(payload.from)?.name ?? t('common.accountFallback')} → ${accounts.get(payload.to)?.name ?? t('common.accountFallback')}`
       return {
         ...base,
         symbolName: 'arrow.left.arrow.right.circle.fill',
         tint: 'graphite',
-        typeLabel: 'Перевод',
-        title: 'Перевод',
+        typeLabel: t('common.transfer'),
+        title: t('common.transfer'),
         subtitle: joined(route, operation.note),
         amounts: [rowAmount(payload.spent, 'outgoing'), rowAmount(payload.received, 'incoming')],
         isEditable: true
@@ -228,11 +229,11 @@ export interface OperationDetail {
 export function detailSyncTitle(state: SyncState): string {
   switch (state.kind) {
     case 'pending':
-      return 'Не выгружено'
+      return t('common.notSynced')
     case 'synced':
-      return 'Выгружено'
+      return t('op.synced')
     case 'failed':
-      return `Ошибка выгрузки: ${state.reason}`
+      return t('op.syncFailed', { reason: state.reason })
   }
 }
 
@@ -242,8 +243,8 @@ export function detailAccessibilityLabel(detail: OperationDetail): string {
   return parts.join(', ')
 }
 
-function accountField(account: Account | undefined, title = 'Счёт'): DetailField {
-  return { title, value: account?.name ?? 'Счёт удалён', symbolName: 'creditcard' }
+function accountField(account: Account | undefined, title = t('common.account')): DetailField {
+  return { title, value: account?.name ?? t('op.accountDeleted'), symbolName: 'creditcard' }
 }
 
 function detailAmount(value: Money, direction: Direction, label: string | null = null): DetailAmount {
@@ -256,7 +257,7 @@ export function makeDetail(
   accounts: Map<UUID, Account>,
   debtOrigin: DebtOrigin | null
 ): OperationDetail {
-  const dateField: DetailField = { title: 'Дата', value: fullDate(new Date(operation.date)), symbolName: 'calendar' }
+  const dateField: DetailField = { title: t('common.date'), value: fullDate(new Date(operation.date)), symbolName: 'calendar' }
   const base = { id: operation.id, syncState: operation.syncState, note: operation.note }
   const payload = operation.payload
 
@@ -265,18 +266,18 @@ export function makeDetail(
     case 'income': {
       const category = categories.get(payload.category)
       const isExpense = payload.kind === 'expense'
-      const title = category?.name ?? 'Без категории'
+      const title = category?.name ?? t('common.noCategory')
       return {
         ...base,
         symbolName: category?.symbolName ?? 'questionmark.circle',
         tint: category?.color ?? 'graphite',
-        typeLabel: isExpense ? 'Расход' : 'Доход',
+        typeLabel: isExpense ? t('common.expense') : t('common.income'),
         title,
         amounts: [detailAmount(payload.amount, isExpense ? 'outgoing' : 'incoming')],
         debtID: null,
         isEditable: true,
         fields: [
-          { title: 'Категория', value: title, symbolName: 'square.grid.2x2' },
+          { title: t('common.category'), value: title, symbolName: 'square.grid.2x2' },
           accountField(accounts.get(payload.account)),
           dateField
         ]
@@ -285,19 +286,19 @@ export function makeDetail(
 
     case 'debt': {
       const isGiven = payload.direction === 'given'
-      const title = isGiven ? 'Дал в долг' : 'Взял в долг'
+      const title = isGiven ? t('debt.gave') : t('debt.took')
       return {
         ...base,
         symbolName: isGiven ? 'person.crop.circle.badge.minus' : 'person.crop.circle.badge.plus',
         tint: isGiven ? 'orange' : 'blue',
-        typeLabel: 'Долг',
+        typeLabel: t('common.debt'),
         title,
         amounts: [detailAmount(payload.amount, isGiven ? 'outgoing' : 'incoming')],
         debtID: operation.id,
         isEditable: true,
         fields: [
-          { title: 'Направление', value: title, symbolName: 'arrow.left.arrow.right' },
-          { title: 'Контрагент', value: payload.counterparty, symbolName: 'person' },
+          { title: t('common.direction'), value: title, symbolName: 'arrow.left.arrow.right' },
+          { title: t('common.counterparty'), value: payload.counterparty, symbolName: 'person' },
           accountField(accounts.get(payload.account)),
           dateField
         ]
@@ -306,19 +307,19 @@ export function makeDetail(
 
     case 'repayment': {
       const isGiven = debtOrigin?.direction === 'given'
-      const title = isGiven ? 'Вернули долг' : 'Вернул долг'
+      const title = isGiven ? t('debt.gaveBack') : t('debt.tookBack')
       return {
         ...base,
         symbolName: 'arrow.uturn.backward.circle.fill',
         tint: isGiven ? 'green' : 'orange',
-        typeLabel: 'Погашение долга',
+        typeLabel: t('debt.repaymentType'),
         title,
         amounts: [detailAmount(payload.amount, isGiven ? 'incoming' : 'outgoing')],
         debtID: payload.debt,
         isEditable: false,
         fields: [
-          { title: 'Долг', value: title, symbolName: 'arrow.uturn.backward' },
-          { title: 'Контрагент', value: debtOrigin?.counterparty ?? 'Контрагент', symbolName: 'person' },
+          { title: t('common.debt'), value: title, symbolName: 'arrow.uturn.backward' },
+          { title: t('common.counterparty'), value: debtOrigin?.counterparty ?? t('common.counterparty'), symbolName: 'person' },
           accountField(accounts.get(payload.account)),
           dateField
         ]
@@ -330,17 +331,17 @@ export function makeDetail(
         ...base,
         symbolName: 'arrow.left.arrow.right.circle.fill',
         tint: 'graphite',
-        typeLabel: 'Перевод',
-        title: 'Перевод',
+        typeLabel: t('common.transfer'),
+        title: t('common.transfer'),
         amounts: [
-          detailAmount(payload.spent, 'outgoing', 'Списано'),
-          detailAmount(payload.received, 'incoming', 'Зачислено')
+          detailAmount(payload.spent, 'outgoing', t('op.spent')),
+          detailAmount(payload.received, 'incoming', t('op.received'))
         ],
         debtID: null,
         isEditable: true,
         fields: [
-          accountField(accounts.get(payload.from), 'Счёт списания'),
-          accountField(accounts.get(payload.to), 'Счёт зачисления'),
+          accountField(accounts.get(payload.from), t('op.sourceAccount')),
+          accountField(accounts.get(payload.to), t('op.destinationAccount')),
           dateField
         ]
       }

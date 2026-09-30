@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 All work in this repository follows the ADRs in `docs/adr/`. They are the source of truth for architecture decisions. Before starting any task, read the relevant ADRs, starting with `docs/adr/0001-web-client-architecture.md`, and do not contradict them. If a task requires a new or changed decision, record it as a new numbered ADR before or together with the code change.
 
-AllCash: offline-first personal finance PWA (Vue 3 + TypeScript + Vite, `@` alias → `src/`). UI text is Russian. Web port of an iOS/SwiftUI app (Swift-style naming such as `UUID`, `serverStatusSymbol` returning SF Symbol names).
+AllCash: offline-first personal finance PWA (Vue 3 + TypeScript + Vite, `@` alias → `src/`). UI text is localized (ru/en, see ADR-0002): never hardcode user-facing strings, add keys to `src/core/i18n/ru.ts` and `en.ts` and use `t()`. Web port of an iOS/SwiftUI app (Swift-style naming such as `UUID`, `serverStatusSymbol` returning SF Symbol names).
 
 Layers under `src/`:
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AppIcon from './AppIcon.vue'
 
@@ -9,7 +10,7 @@ const props = withDefaults(
     detent?: 'large' | 'medium'
     cancelTitle?: string
   }>(),
-  { detent: 'large', cancelTitle: 'Отмена' }
+  { detent: 'large', cancelTitle: t('common.cancel') }
 )
 
 const emit = defineEmits<{ close: [] }>()

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, onMounted, ref } from 'vue'
 import ConfirmDialog from '@/design/ConfirmDialog.vue'
 import EmptyState from '@/design/EmptyState.vue'
@@ -37,8 +38,8 @@ function onVisibilityChange(): void {
 }
 
 function actionsFor(row: OperationRowModel): SwipeAction[] {
-  const actions: SwipeAction[] = [{ id: 'delete', title: 'Удалить', symbol: 'trash', tone: 'danger' }]
-  if (row.isEditable) actions.push({ id: 'edit', title: 'Изменить', symbol: 'pencil', tone: 'accent' })
+  const actions: SwipeAction[] = [{ id: 'delete', title: t('common.delete'), symbol: 'trash', tone: 'danger' }]
+  if (row.isEditable) actions.push({ id: 'edit', title: t('common.edit'), symbol: 'pencil', tone: 'accent' })
   return actions
 }
 
@@ -56,26 +57,25 @@ async function confirmDeletion(): Promise<void> {
 
 <template>
   <div class="screen">
-    <ScreenHeader title="Операции" />
+    <ScreenHeader :title="t('tabs.operations')" />
 
     <LoadingView v-if="phase.kind === 'loading'" />
 
     <EmptyState
       v-else-if="phase.kind === 'failed'"
-      title="Лента не открылась"
+      :title="t('ops.failedOpen')"
       symbol="exclamationmark.triangle"
       :description="phase.message"
     >
       <template #actions>
-        <AppButton @click="store.load()">Повторить</AppButton>
+        <AppButton @click="store.load()">{{ t('common.retry') }}</AppButton>
       </template>
     </EmptyState>
 
     <EmptyState
       v-else-if="!store.hasOperations.value"
-      title="Пока нет операций"
+      :title="t('ops.none')"
       symbol="tray"
-      description="Нажмите кнопку с плюсом, чтобы записать первую."
     />
 
     <div v-else class="list">
@@ -112,7 +112,7 @@ async function confirmDeletion(): Promise<void> {
 
     <ConfirmDialog
       :open="pendingDeletion !== null"
-      title="Удалить операцию?"
+      :title="t('ops.deleteTitle')"
       :message="deletionMessage"
       @confirm="confirmDeletion"
       @cancel="pendingDeletion = null"
@@ -120,10 +120,10 @@ async function confirmDeletion(): Promise<void> {
 
     <ConfirmDialog
       :open="actionError !== null"
-      title="Не удалось удалить"
+      :title="t('ops.deleteFailed')"
       :message="actionError ?? ''"
-      confirm-title="Понятно"
-      cancel-title="Закрыть"
+      :confirm-title="t('common.gotIt')"
+      :cancel-title="t('common.close')"
       :destructive="false"
       @confirm="actionError = null"
       @cancel="actionError = null"

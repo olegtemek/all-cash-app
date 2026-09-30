@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, ref } from 'vue'
 import EmptyState from '@/design/EmptyState.vue'
 import SheetView from '@/design/SheetView.vue'
 import OperationRow from '@/features/operations/OperationRow.vue'
 import OperationDetailSheet from '@/features/operations/OperationDetailSheet.vue'
-import { AnalyticsPeriod, operationsWording, shareTitle, uncategorizedName } from '@/core/model/analytics'
+import { AnalyticsPeriod, operationsWording, periodInSentence, shareTitle, uncategorizedName } from '@/core/model/analytics'
 import { formatBalance, type CurrencyCode } from '@/core/model/money'
 import { ledgerStore as store } from '@/core/store/ledgerStore'
 
@@ -24,21 +25,21 @@ const days = computed(() => store.expenseDays(props.categoryId, props.period, pr
   <SheetView
     :open="true"
     :title="spending?.name ?? uncategorizedName"
-    cancel-title="Назад"
+    :cancel-title="t('common.back')"
     @close="emit('close')"
   >
     <EmptyState
       v-if="!spending"
-      title="Расходов нет"
+      :title="t('an.noExpenses')"
       symbol="tray"
-      :description="`За ${period.title.toLowerCase()} в этой категории расходов не осталось.`"
+      :description="t('an.noCategoryExpenses', { period: periodInSentence(period.title) })"
     />
 
     <div v-else class="category">
       <div class="category__header">
         <p class="category__total numeric">{{ formatBalance(spending.total.amount, spending.total.currency) }}</p>
         <p class="text-subheadline secondary">
-          {{ operationsWording(spending.operationCount) }} · {{ shareTitle(spending.share) }} расходов
+          {{ t('an.shareOfExpenses', { operations: operationsWording(spending.operationCount), share: shareTitle(spending.share) }) }}
         </p>
       </div>
 

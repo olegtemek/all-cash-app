@@ -1,5 +1,9 @@
+<script setup lang="ts">
+import { t } from '@/core/i18n'
+</script>
+
 <template>
-  <div class="loading" role="status" aria-label="Загрузка">
+  <div class="loading" role="status" :aria-label="t('common.loading')">
     <span class="loading__spinner" />
   </div>
 </template>

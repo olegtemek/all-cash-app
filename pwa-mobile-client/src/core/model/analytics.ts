@@ -1,4 +1,5 @@
-import { interfaceLocale } from './locale'
+import { t, plural } from '@/core/i18n'
+import { appLocale, interfaceLocale } from './locale'
 import type { UUID } from './ledger'
 import type { CurrencyCode, PaletteColorLike } from './analyticsTypes'
 import { formatBalance, spokenBalance } from './money'
@@ -44,7 +45,11 @@ export class AnalyticsPeriod {
 }
 
 export const uncategorizedID: UUID = '00000000-0000-0000-0000-000000000000'
-export const uncategorizedName = 'Без категории'
+export function periodInSentence(title: string): string {
+  return appLocale === 'ru' ? title.toLowerCase() : title
+}
+
+export const uncategorizedName = t('common.noCategory')
 
 export interface CategorySpending {
   id: UUID
@@ -81,37 +86,13 @@ export interface AnalyticsReport {
 }
 
 export function operationsWording(count: number): string {
-  const plural = new Intl.PluralRules('ru-RU').select(count)
-  switch (plural) {
-    case 'one':
-      return `${count} операция`
-    case 'few':
-      return `${count} операции`
-    default:
-      return `${count} операций`
-  }
+  return plural('plural.operations', count)
 }
 
 export function entriesWording(count: number): string {
-  const plural = new Intl.PluralRules('ru-RU').select(count)
-  switch (plural) {
-    case 'one':
-      return `${count} запись`
-    case 'few':
-      return `${count} записи`
-    default:
-      return `${count} записей`
-  }
+  return plural('plural.entries', count)
 }
 
 export function repaymentsWording(count: number): string {
-  const plural = new Intl.PluralRules('ru-RU').select(count)
-  switch (plural) {
-    case 'one':
-      return `${count} погашение`
-    case 'few':
-      return `${count} погашения`
-    default:
-      return `${count} погашений`
-  }
+  return plural('plural.repayments', count)
 }

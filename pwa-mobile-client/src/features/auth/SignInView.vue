@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, ref, watch } from 'vue'
 import AppButton from '@/design/AppButton.vue'
 import AppIcon from '@/design/AppIcon.vue'
@@ -76,20 +77,20 @@ async function register(): Promise<void> {
 </script>
 
 <template>
-  <SheetView :open="true" title="Вход" cancel-title="Назад" @close="emit('close')">
+  <SheetView :open="true" :title="t('auth.signIn')" :cancel-title="t('common.back')" @close="emit('close')">
     <div class="signin">
       <header class="signin__header">
         <span class="signin__mark">
           <AppIcon name="creditcard.fill" :size="32" />
         </span>
 
-        <h2 class="text-title">Вход</h2>
+        <h2 class="text-title">{{ t('auth.signIn') }}</h2>
         <p class="text-subheadline secondary">
-          Укажите сервер и логин — операции будут синхронизироваться с ним
+          {{ t('auth.intro') }}
         </p>
       </header>
 
-      <FormCard title="Сервер">
+      <FormCard :title="t('common.server')">
         <FieldRow symbol="server.rack" :is-active="focusedField === 'server'">
           <input
             v-model="server"
@@ -115,7 +116,7 @@ async function register(): Promise<void> {
         />
       </FormCard>
 
-      <FormCard title="Логин">
+      <FormCard :title="t('common.login')">
         <FieldRow symbol="person" :is-active="focusedField === 'login'">
           <input
             v-model="login"
@@ -124,7 +125,7 @@ async function register(): Promise<void> {
             autocapitalize="none"
             autocorrect="off"
             spellcheck="false"
-            placeholder="Ваш логин на сервере"
+            :placeholder="t('auth.yourLogin')"
             @focus="focusedField = 'login'"
             @blur="focusedField = null"
             @input="resetValidation"
@@ -136,10 +137,6 @@ async function register(): Promise<void> {
       <div class="signin__notes">
         <InlineMessage v-if="message" kind="error" :text="authErrorText(message)" />
 
-        <InlineMessage
-          kind="info"
-          text="Пароль не нужен: логин отправляется с каждым запросом к серверу. Он разделяет данные, но не защищает их — держите сервер в доверенной сети."
-        />
       </div>
     </div>
 
@@ -147,11 +144,11 @@ async function register(): Promise<void> {
       <div class="signin__bar">
         <AppButton full-width :disabled="!canSubmit" @click="submit">
           <SpinnerDot v-if="store.isBusy.value" />
-          <span v-else>Войти</span>
+          <span v-else>{{ t('auth.signInAction') }}</span>
         </AppButton>
 
         <AppButton v-if="store.canRegister.value" variant="glass" full-width @click="register">
-          Создать логин на сервере
+          {{ t('auth.createLogin') }}
         </AppButton>
       </div>
     </template>

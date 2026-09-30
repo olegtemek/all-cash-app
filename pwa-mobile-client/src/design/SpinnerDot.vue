@@ -1,5 +1,9 @@
+<script setup lang="ts">
+import { t } from '@/core/i18n'
+</script>
+
 <template>
-  <span class="dot" role="status" aria-label="Идёт загрузка" />
+  <span class="dot" role="status" :aria-label="t('common.loadingInProgress')" />
 </template>
 
 <style scoped>

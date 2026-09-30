@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, ref } from 'vue'
 import AppButton from '@/design/AppButton.vue'
 import AppIcon from '@/design/AppIcon.vue'
@@ -20,19 +21,18 @@ const categories = computed(() => store.availableCategories(props.kind))
 <template>
   <SheetView :open="true" :title="kindPluralTitle(kind)" detent="medium" @close="emit('close')">
     <template #action>
-      <button type="button" class="picker__add" aria-label="Новая категория" @click="isCreating = true">
+      <button type="button" class="picker__add" :aria-label="t('common.newCategory')" @click="isCreating = true">
         <AppIcon name="plus" :size="20" />
       </button>
     </template>
 
     <EmptyState
       v-if="categories.length === 0"
-      title="Категорий пока нет"
+      :title="t('cat.none')"
       symbol="tag"
-      description="Создайте первую — она сразу встанет в операцию."
     >
       <template #actions>
-        <AppButton @click="isCreating = true">Новая категория</AppButton>
+        <AppButton @click="isCreating = true">{{ t('common.newCategory') }}</AppButton>
       </template>
     </EmptyState>
 

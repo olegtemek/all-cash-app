@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 export type APIErrorCode =
   | 'bad_request'
   | 'unknown_login'
@@ -24,13 +25,13 @@ export function isSessionExpired(error: APIError): boolean {
 export function apiErrorText(error: APIError): string {
   switch (error.kind) {
     case 'malformedServer':
-      return 'Адрес сервера выглядит некорректно'
+      return t('common.badServerAddress')
     case 'unreachable':
-      return 'Сервер недоступен. Проверьте адрес и соединение'
+      return t('common.unreachableServer')
     case 'status':
-      return error.message.length > 0 ? error.message : `Сервер ответил ошибкой ${error.status}`
+      return error.message.length > 0 ? error.message : t('net.serverStatus', { status: error.status })
     case 'decoding':
-      return `Сервер вернул неожиданный ответ: ${error.details}`
+      return t('net.unexpected', { details: error.details })
   }
 }
 

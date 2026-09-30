@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed } from 'vue'
 import AppIcon from '@/design/AppIcon.vue'
 import type { AmountExpression } from '@/core/model/amountExpression'
@@ -21,7 +22,7 @@ const resultText = computed(() => {
 
 const failureText = computed(() => {
   const value = result.value
-  return !value.ok && value.failure === 'divisionByZero' ? 'Деление на ноль' : null
+  return !value.ok && value.failure === 'divisionByZero' ? t('common.divisionByZero') : null
 })
 </script>
 

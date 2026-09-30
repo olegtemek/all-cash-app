@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import type { AmountExpression, AmountValue } from './amountExpression'
 import type { Account, Category, CategoryKind } from './ledger'
 import { formatBalance, type Money } from './money'
@@ -7,11 +8,11 @@ export type AccountError = 'emptyName' | 'duplicateName' | 'divisionByZero'
 export function accountErrorText(error: AccountError): string {
   switch (error) {
     case 'emptyName':
-      return 'Укажите название счёта'
+      return t('err.account.emptyName')
     case 'duplicateName':
-      return 'Счёт с таким названием уже есть'
+      return t('err.account.duplicateName')
     case 'divisionByZero':
-      return 'Деление на ноль'
+      return t('common.divisionByZero')
   }
 }
 
@@ -40,15 +41,15 @@ export type RepaymentError =
 export function repaymentErrorText(error: RepaymentError): string {
   switch (error.kind) {
     case 'emptyAmount':
-      return 'Укажите сумму погашения'
+      return t('err.repay.emptyAmount')
     case 'notPositive':
-      return 'Сумма должна быть больше нуля'
+      return t('common.amountMustBePositive')
     case 'exceedsOutstanding':
-      return `Больше остатка долга — ${error.remainder}`
+      return t('err.repay.exceeds', { remainder: error.remainder })
     case 'noAccount':
-      return 'Выберите счёт'
+      return t('common.chooseAccount')
     case 'currencyMismatch':
-      return `Нужен счёт в валюте долга — ${error.currency}`
+      return t('err.repay.currencyMismatch', { currency: error.currency })
   }
 }
 
@@ -85,29 +86,29 @@ export type OperationError =
 export function operationErrorText(error: OperationError): string {
   switch (error.kind) {
     case 'emptyAmount':
-      return 'Укажите сумму'
+      return t('err.op.emptyAmount')
     case 'notPositive':
-      return 'Сумма должна быть больше нуля'
+      return t('common.amountMustBePositive')
     case 'divisionByZero':
-      return 'Деление на ноль — сумма не посчитана'
+      return t('err.op.divisionByZero')
     case 'noAccount':
-      return 'Выберите счёт'
+      return t('common.chooseAccount')
     case 'noCategory':
-      return 'Выберите категорию'
+      return t('err.op.noCategory')
     case 'emptyCounterparty':
-      return 'Укажите, с кем связан долг'
+      return t('err.op.emptyCounterparty')
     case 'emptyReceivedAmount':
-      return 'Укажите сумму зачисления'
+      return t('err.op.emptyReceived')
     case 'receivedNotPositive':
-      return 'Сумма зачисления должна быть больше нуля'
+      return t('err.op.receivedNotPositive')
     case 'noDestinationAccount':
-      return 'Выберите счёт зачисления'
+      return t('err.op.noDestination')
     case 'sameAccount':
-      return 'Счета списания и зачисления должны различаться'
+      return t('err.op.sameAccount')
     case 'belowRepaid':
-      return `По долгу есть погашения — сумма не может быть меньше ${error.minimum}`
+      return t('err.op.belowRepaid', { minimum: error.minimum })
     case 'debtCurrencyLocked':
-      return `Долг уже гасили: нужен счёт в его валюте — ${error.currency}`
+      return t('err.op.currencyLocked', { currency: error.currency })
   }
 }
 
@@ -186,11 +187,11 @@ export type CategoryError = 'emptyName' | 'noKind' | 'duplicateName'
 export function categoryErrorText(error: CategoryError): string {
   switch (error) {
     case 'emptyName':
-      return 'Укажите название категории'
+      return t('err.category.emptyName')
     case 'noKind':
-      return 'Отметьте хотя бы один тип: расход или доход'
+      return t('err.category.noKind')
     case 'duplicateName':
-      return 'Категория с таким названием уже есть'
+      return t('err.category.duplicateName')
   }
 }
 
@@ -220,19 +221,19 @@ export const minLoginLength = 3
 export function authErrorText(error: AuthError): string {
   switch (error.kind) {
     case 'emptyServer':
-      return 'Укажите адрес сервера'
+      return t('err.auth.emptyServer')
     case 'malformedServer':
-      return 'Адрес сервера выглядит некорректно'
+      return t('common.badServerAddress')
     case 'emptyLogin':
-      return 'Укажите логин'
+      return t('err.auth.emptyLogin')
     case 'shortLogin':
-      return `Логин короче ${minLoginLength} символов`
+      return t('err.auth.shortLogin', { min: minLoginLength })
     case 'unknownLogin':
-      return 'Такого логина нет на сервере'
+      return t('err.auth.unknownLogin')
     case 'loginTaken':
-      return 'Логин уже занят'
+      return t('err.auth.loginTaken')
     case 'serverUnreachable':
-      return 'Сервер недоступен. Проверьте адрес и соединение'
+      return t('common.unreachableServer')
     case 'unknown':
       return error.message
   }

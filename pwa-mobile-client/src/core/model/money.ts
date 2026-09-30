@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import { interfaceLocale } from './locale'
 
 export type CurrencyCode = string
@@ -55,7 +56,7 @@ export function directionSign(direction: Direction): string {
 }
 
 export function directionSpokenSign(direction: Direction): string {
-  return direction === 'outgoing' ? 'минус' : 'плюс'
+  return direction === 'outgoing' ? t('spoken.minus') : t('spoken.plus')
 }
 
 export function formatBalance(amount: number, currency: CurrencyCode): string {

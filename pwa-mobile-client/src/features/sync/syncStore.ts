@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import { computed, ref } from 'vue'
 import type { LedgerStore } from '@/core/store/ledgerStore'
 import { APIClient } from '@/core/network/apiClient'
@@ -17,11 +18,11 @@ export type SyncError =
 export function syncErrorText(error: SyncError): string {
   switch (error.kind) {
     case 'notSignedIn':
-      return 'Войдите на сервер, чтобы выгрузить записи'
+      return t('sync.needSignIn')
     case 'sessionExpired':
-      return 'Сервер не знает этот логин. Войдите заново'
+      return t('sync.unknownLogin')
     case 'serverUnreachable':
-      return 'Сервер недоступен. Проверьте соединение'
+      return t('sync.offline')
     case 'serverFailure':
       return error.message
   }
@@ -214,7 +215,7 @@ export class SyncStore {
 
 function clientFor(session: UserSession): APIClient {
   const client = APIClient.create(session.server)
-  if (!client) throw { kind: 'serverFailure', message: 'Адрес сервера выглядит некорректно' } satisfies SyncError
+  if (!client) throw { kind: 'serverFailure', message: t('common.badServerAddress') } satisfies SyncError
   return client
 }
 

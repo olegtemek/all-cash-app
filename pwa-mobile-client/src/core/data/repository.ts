@@ -23,5 +23,7 @@ export interface LedgerRepository {
   applyPulled(page: PullPage): Promise<void>
   applyPushResult(result: PushResult): Promise<void>
 
+  importSnapshot(snapshot: LedgerSnapshot): Promise<void>
+
   eraseAll(): Promise<void>
 }

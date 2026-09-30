@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import AppIcon from '@/design/AppIcon.vue'
 import { mainTabs, tabSymbol, tabTitle, type MainTab } from './tabs'
@@ -81,7 +82,7 @@ onUnmounted(() => window.removeEventListener('resize', measure))
 </script>
 
 <template>
-  <nav class="bar" aria-label="Разделы">
+  <nav class="bar" :aria-label="t('nav.sections')">
     <div ref="group" class="bar__group liquid-glass">
       <div
         class="bar__bubble liquid-glass liquid-glass--control"
@@ -112,7 +113,7 @@ onUnmounted(() => window.removeEventListener('resize', measure))
     <button
       type="button"
       class="bar__create liquid-glass liquid-glass--control liquid-glass--accent"
-      aria-label="Новая операция"
+      :aria-label="t('nav.newOperation')"
       @click="emit('create')"
     >
       <AppIcon name="plus" :size="24" :stroke-width="2.6" />

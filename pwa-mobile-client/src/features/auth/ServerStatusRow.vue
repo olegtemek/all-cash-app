@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed } from 'vue'
 import AppIcon from '@/design/AppIcon.vue'
 import SpinnerDot from '@/design/SpinnerDot.vue'
@@ -23,7 +24,7 @@ const canCheck = computed(() => props.isEnabled && props.status.kind !== 'checki
 </script>
 
 <template>
-  <div class="status" :aria-label="`Состояние сервера: ${serverStatusTitle(status)}`">
+  <div class="status" :aria-label="t('auth.serverState', { status: serverStatusTitle(status) })">
     <span class="status__icon" :class="tone">
       <SpinnerDot v-if="status.kind === 'checking'" />
       <AppIcon v-else :name="serverStatusSymbol(status)" :size="16" />
@@ -34,7 +35,7 @@ const canCheck = computed(() => props.isEnabled && props.status.kind !== 'checki
     </span>
 
     <button type="button" class="status__check text-subheadline" :disabled="!canCheck" @click="emit('check')">
-      Проверить
+      {{ t('auth.check') }}
     </button>
   </div>
 </template>

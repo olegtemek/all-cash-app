@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 export type MainTab = 'operations' | 'accounts' | 'analytics' | 'settings'
 
 export const mainTabs: MainTab[] = ['operations', 'accounts', 'analytics', 'settings']
@@ -5,13 +6,13 @@ export const mainTabs: MainTab[] = ['operations', 'accounts', 'analytics', 'sett
 export function tabTitle(tab: MainTab): string {
   switch (tab) {
     case 'operations':
-      return 'Операции'
+      return t('tabs.operations')
     case 'accounts':
-      return 'Счета'
+      return t('tabs.accounts')
     case 'analytics':
-      return 'Аналитика'
+      return t('tabs.analytics')
     case 'settings':
-      return 'Настройки'
+      return t('tabs.settings')
   }
 }
 

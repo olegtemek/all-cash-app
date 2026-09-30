@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import type { Account, Category, MoneyOperation, SyncState, UUID } from './ledger'
 import { failedState, syncedState } from './ledger'
 
@@ -35,7 +36,7 @@ export function pushFailureNote(result: PushResult): string | null {
   const reasons = Object.values(result.rejected).sort()
   const reason = reasons[0]
   if (reason === undefined) return null
-  return Object.keys(result.accepted).length === 0 ? reason : `Часть записей не ушла: ${reason}`
+  return Object.keys(result.accepted).length === 0 ? reason : t('sync.partialFailure', { reason })
 }
 
 export interface LedgerSnapshot {

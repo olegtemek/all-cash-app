@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import { interfaceLocale } from './locale'
 
 export function startOfDay(date: Date): Date {
@@ -18,8 +19,8 @@ export function isYesterday(date: Date, now: Date = new Date()): boolean {
 }
 
 export function dayTitle(day: Date, now: Date = new Date()): string {
-  if (isToday(day, now)) return 'Сегодня'
-  if (isYesterday(day, now)) return 'Вчера'
+  if (isToday(day, now)) return t('dates.today')
+  if (isYesterday(day, now)) return t('dates.yesterday')
 
   const sameYear = day.getFullYear() === now.getFullYear()
   return new Intl.DateTimeFormat(interfaceLocale, {
@@ -63,7 +64,7 @@ export function fromDateInputValue(raw: string, previous?: string): string {
 }
 
 export function formatFileSize(bytes: number): string {
-  const units = ['Б', 'КБ', 'МБ', 'ГБ']
+  const units = t('fileSize.units').split(',')
   let value = bytes
   let unit = 0
   while (value >= 1024 && unit < units.length - 1) {

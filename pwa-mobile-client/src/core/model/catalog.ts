@@ -28,7 +28,8 @@ export const symbolNames: string[] = [
   'laptopcomputer',
   'chart.line.uptrend.xyaxis',
   'briefcase.fill',
-  'creditcard.fill'
+  'creditcard.fill',
+  'arrow.up.arrow.down'
 ]
 
 export const catalogColors = paletteColors

@@ -4,10 +4,11 @@ import { useRoute, useRouter } from 'vue-router'
 import MainTabBar from './MainTabBar.vue'
 import OperationFormScreen from '@/features/operations/OperationFormScreen.vue'
 import { authStore as auth } from '@/features/auth/authStore'
-import { exportStore as exports } from '@/features/export/exportStore'
 import { syncStore as sync } from '@/features/sync/syncStore'
 import { ledgerStore as ledger } from '@/core/store/ledgerStore'
 import { mainTabs, tabPath, type MainTab } from './tabs'
+
+const pingInterval = 60_000
 
 const route = useRoute()
 const router = useRouter()
@@ -31,13 +32,22 @@ function onVisibilityChange(): void {
   if (document.visibilityState === 'visible') void syncAutomatically()
 }
 
+async function pingAndSync(): Promise<void> {
+  if (!auth.session.value || sync.isSyncing.value) return
+  if (await auth.ping()) await syncAutomatically()
+}
+
+let pingTimer: ReturnType<typeof setInterval> | null = null
+
 onMounted(async () => {
   await ledger.loadIfNeeded()
   await syncAutomatically()
   document.addEventListener('visibilitychange', onVisibilityChange)
+  pingTimer = setInterval(() => void pingAndSync(), pingInterval)
 })
 
 onUnmounted(() => {
+  if (pingTimer !== null) clearInterval(pingTimer)
   document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 
@@ -47,15 +57,6 @@ watch(
     if (!expired) return
     auth.sessionExpired()
     sync.acknowledgeSessionExpiry()
-  }
-)
-
-watch(
-  () => exports.sessionExpired.value,
-  (expired) => {
-    if (!expired) return
-    auth.sessionExpired()
-    exports.acknowledgeSessionExpiry()
   }
 )
 </script>

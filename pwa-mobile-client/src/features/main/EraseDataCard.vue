@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { ref } from 'vue'
 import ConfirmDialog from '@/design/ConfirmDialog.vue'
 import FieldRow from '@/design/FieldRow.vue'
 import FormCard from '@/design/FormCard.vue'
-import InlineMessage from '@/design/InlineMessage.vue'
 import SpinnerDot from '@/design/SpinnerDot.vue'
 import { ledgerStore as ledger } from '@/core/store/ledgerStore'
 import { syncStore as sync } from '@/features/sync/syncStore'
@@ -24,26 +24,22 @@ async function erase(): Promise<void> {
 
 <template>
   <div class="card">
-    <FormCard title="Данные">
+    <FormCard :title="t('erase.title')">
       <FieldRow symbol="trash" as="button" :disabled="isErasing" @click="isConfirming = true">
-        <span :class="isErasing ? 'secondary' : 'card__danger'">Очистить локальные данные</span>
+        <span :class="isErasing ? 'secondary' : 'card__danger'">{{ t('erase.action') }}</span>
         <span v-if="isErasing" class="card__trailing">
           <SpinnerDot />
         </span>
       </FieldRow>
     </FormCard>
 
-    <InlineMessage
-      kind="info"
-      text="Удалит счета и операции только на этом устройстве и сбросит курсор синхронизации. Очистите таблицы на сервере отдельно."
-    />
   </div>
 
   <ConfirmDialog
     :open="isConfirming"
-    title="Очистить данные на устройстве?"
-    message="Счета, категории и операции будут удалены без возможности восстановления."
-    confirm-title="Очистить"
+    :title="t('erase.confirmTitle')"
+    :message="t('erase.confirmMessage')"
+    :confirm-title="t('erase.confirm')"
     @confirm="erase"
     @cancel="isConfirming = false"
   />

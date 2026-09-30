@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import { add, divide, multiply, rounded, subtract } from './decimal'
 import { decimalSeparator, interfaceLocale } from './locale'
 
@@ -15,13 +16,13 @@ function isFirstInOrder(operator: AmountOperator): boolean {
 export function operatorSpokenName(operator: AmountOperator): string {
   switch (operator) {
     case '+':
-      return 'плюс'
+      return t('spoken.plus')
     case '−':
-      return 'минус'
+      return t('spoken.minus')
     case '×':
-      return 'умножить'
+      return t('spoken.multiply')
     case '÷':
-      return 'разделить'
+      return t('spoken.divide')
   }
 }
 

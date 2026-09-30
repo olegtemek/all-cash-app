@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import { computed, ref } from 'vue'
 import { APIClient } from '@/core/network/apiClient'
 import { asAPIError, apiErrorText, type APIError } from '@/core/network/apiError'
@@ -21,13 +22,13 @@ export type ServerStatus =
 export function serverStatusTitle(status: ServerStatus): string {
   switch (status.kind) {
     case 'unknown':
-      return 'Соединение не проверено'
+      return t('server.unknown')
     case 'checking':
-      return 'Проверяем соединение…'
+      return t('server.checking')
     case 'available':
-      return 'Сервер доступен'
+      return t('server.available')
     case 'offline':
-      return 'Нет соединения'
+      return t('server.offline')
     case 'failed':
       return status.reason
   }
@@ -186,6 +187,14 @@ export class AuthStore {
     this.serverStatus.value = await checkServerStatus(this.server.value)
   }
 
+  async ping(): Promise<boolean> {
+    const session = this.session.value
+    if (!session) return false
+
+    const status = await checkServerStatus(session.server)
+    return status.kind === 'available'
+  }
+
   async signIn(): Promise<void> {
     await this.open('auth/login')
   }
@@ -233,7 +242,7 @@ export class AuthStore {
 async function checkServerStatus(server: string): Promise<ServerStatus> {
   const normalized = AuthRules.normalizedServer(server)
   const client = normalized ? APIClient.create(normalized) : null
-  if (!client) return { kind: 'failed', reason: 'Адрес сервера выглядит некорректно' }
+  if (!client) return { kind: 'failed', reason: t('common.badServerAddress') }
 
   try {
     const response = await client.send({ path: 'health' })
@@ -242,11 +251,11 @@ async function checkServerStatus(server: string): Promise<ServerStatus> {
     const success = response.status >= 200 && response.status < 300
     if (success && (health === null || isHealthy(health))) return { kind: 'available' }
 
-    return { kind: 'failed', reason: 'Сервер отвечает, но база данных недоступна' }
+    return { kind: 'failed', reason: t('server.dbDown') }
   } catch (error) {
     const apiError = asAPIError(error)
     if (apiError?.kind === 'unreachable') return { kind: 'offline' }
-    return { kind: 'failed', reason: apiError ? apiErrorText(apiError) : 'Не удалось проверить сервер' }
+    return { kind: 'failed', reason: apiError ? apiErrorText(apiError) : t('server.checkFailed') }
   }
 }
 

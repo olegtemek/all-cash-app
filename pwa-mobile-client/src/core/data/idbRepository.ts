@@ -136,6 +136,18 @@ export class IndexedDBLedgerRepository implements LedgerRepository {
     await transaction.done
   }
 
+  async importSnapshot(snapshot: LedgerSnapshot): Promise<void> {
+    const db = await this.open()
+    const transaction = db.transaction(['accounts', 'categories', 'operations'], 'readwrite')
+
+    await Promise.all([
+      ...snapshot.accounts.map((record) => transaction.objectStore('accounts').put(record)),
+      ...snapshot.categories.map((record) => transaction.objectStore('categories').put(record)),
+      ...snapshot.operations.map((record) => transaction.objectStore('operations').put(record)),
+      transaction.done
+    ])
+  }
+
   async eraseAll(): Promise<void> {
     const db = await this.open()
     const transaction = db.transaction(['accounts', 'categories', 'operations'], 'readwrite')

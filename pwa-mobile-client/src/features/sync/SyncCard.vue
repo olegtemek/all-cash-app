@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed } from 'vue'
 import FieldRow from '@/design/FieldRow.vue'
 import FormCard from '@/design/FormCard.vue'
@@ -16,9 +17,9 @@ const isOffline = computed(() => auth.serverStatus.value.kind === 'offline')
 const canSync = computed(() => !sync.isSyncing.value && !isOffline.value && auth.session.value !== null)
 
 const stateTitle = computed(() => {
-  if (sync.isSyncing.value) return 'Идёт синхронизация…'
+  if (sync.isSyncing.value) return t('sync.inProgress')
   const pending = ledger.pendingCount.value
-  return pending === 0 ? 'Все записи выгружены' : `Не выгружено: ${pending}`
+  return pending === 0 ? t('sync.allDone') : t('sync.pending', { count: pending })
 })
 
 const stateSymbol = computed(() => {
@@ -28,7 +29,7 @@ const stateSymbol = computed(() => {
 
 const lastSyncTitle = computed(() => {
   const date = sync.lastSyncedDate.value
-  return date ? shortDateTime(date) : 'Ещё не выгружалось'
+  return date ? shortDateTime(date) : t('sync.never')
 })
 
 async function run(): Promise<void> {
@@ -39,7 +40,7 @@ async function run(): Promise<void> {
 
 <template>
   <div class="card">
-    <FormCard title="Синхронизация">
+    <FormCard :title="t('sync.title')">
       <ServerStatusRow
         :status="auth.serverStatus.value"
         :is-enabled="!sync.isSyncing.value"
@@ -49,21 +50,21 @@ async function run(): Promise<void> {
       <FormDivider />
 
       <FieldRow :symbol="stateSymbol">
-        <span>Состояние</span>
+        <span>{{ t('sync.state') }}</span>
         <span class="card__value secondary">{{ stateTitle }}</span>
       </FieldRow>
 
       <FormDivider />
 
       <FieldRow symbol="clock.arrow.circlepath">
-        <span>Последняя выгрузка</span>
+        <span>{{ t('sync.last') }}</span>
         <span class="card__value secondary">{{ lastSyncTitle }}</span>
       </FieldRow>
 
       <FormDivider />
 
       <FieldRow symbol="icloud.and.arrow.up" as="button" :is-active="canSync" :disabled="!canSync" @click="run">
-        <span :class="canSync ? 'card__accent' : 'secondary'">Синхронизировать</span>
+        <span :class="canSync ? 'card__accent' : 'secondary'">{{ t('sync.run') }}</span>
         <span v-if="sync.isSyncing.value" class="card__value">
           <SpinnerDot />
         </span>

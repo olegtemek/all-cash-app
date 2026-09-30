@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import AppIcon from '@/design/AppIcon.vue'
 import { operators, operatorSpokenName, separatorSymbol, type AmountKey, type AmountOperator } from '@/core/model/amountExpression'
 
@@ -31,9 +32,9 @@ function accessibilityLabel(key: AmountKey): string {
     case 'digit':
       return String(key.digit)
     case 'separator':
-      return 'запятая'
+      return t('spoken.comma')
     case 'delete':
-      return 'стереть'
+      return t('spoken.delete')
     case 'action':
       return operatorSpokenName(key.action as AmountOperator)
   }
@@ -45,7 +46,7 @@ function keyID(key: AmountKey): string {
 </script>
 
 <template>
-  <div class="keypad" role="group" aria-label="Клавиатура суммы">
+  <div class="keypad" role="group" :aria-label="t('keypad.label')">
     <div v-for="(row, index) in rows" :key="index" class="keypad__row">
       <button
         v-for="key in row"

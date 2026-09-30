@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import { pendingState, type Category, type CategoryKind } from '../model/ledger'
 
 // Сервер хранит у категории один kind, поэтому коррекция — две отдельные категории.
@@ -11,7 +12,7 @@ export const correctionNames = ['Коррекция', 'Correction']
 export function correctionCategory(kind: CategoryKind): Category {
   return {
     id: correctionIDs[kind],
-    name: 'Коррекция',
+    name: t('category.correction'),
     kinds: [kind],
     symbolName: 'arrow.up.arrow.down',
     color: 'graphite',

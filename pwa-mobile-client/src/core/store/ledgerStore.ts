@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import { computed, ref, shallowRef, type Ref } from 'vue'
 import { correctionCategory, correctionIDs, correctionNames } from '../data/defaultCategories'
 import { IndexedDBLedgerRepository } from '../data/idbRepository'
@@ -302,6 +303,27 @@ export class LedgerStore {
       await this.repository.updateOperation(moved)
       this.operations = this.operations.map((item) => (item.id === moved.id ? moved : item))
     }
+  }
+
+  snapshot(): LedgerSnapshot {
+    return {
+      accounts: [...this.rawAccounts, ...this.deleted.accounts],
+      categories: [...this.categoryList, ...this.deleted.categories],
+      operations: [...this.operations, ...this.deleted.operations]
+    }
+  }
+
+  // Merge by id: backup record replaces the local one with the same id.
+  async importSnapshot(snapshot: LedgerSnapshot): Promise<boolean> {
+    try {
+      await this.repository.importSnapshot(snapshot)
+    } catch (error) {
+      this.actionError.value = errorMessage(error)
+      return false
+    }
+
+    await this.load()
+    return true
   }
 
   async eraseAll(): Promise<void> {
@@ -774,7 +796,7 @@ export class LedgerStore {
     const amount = money(Math.abs(delta), account.currency)
     const payload: Payload = { kind, category: category.id, account: accountID, amount }
 
-    return this.record(date, 'Правка суммы счёта', payload)
+    return this.record(date, t('ledger.balanceEditNote'), payload)
   }
 
   private async correctionCategoryForWriting(kind: CategoryKind): Promise<Category | null> {
@@ -1081,7 +1103,7 @@ export class LedgerStore {
         id: operation.id,
         date: operation.date,
         amount: payload.amount,
-        accountName: accountNames.get(payload.account) ?? 'Счёт',
+        accountName: accountNames.get(payload.account) ?? t('common.accountFallback'),
         syncState: operation.syncState
       })
       repayments.set(key, bucket)
@@ -1107,7 +1129,7 @@ export class LedgerStore {
             id: operation.id,
             date: operation.date,
             amount: payload.amount,
-            accountName: accountNames.get(payload.account) ?? 'Счёт',
+            accountName: accountNames.get(payload.account) ?? t('common.accountFallback'),
             syncState: operation.syncState
           }
         ]
@@ -1126,7 +1148,7 @@ export class LedgerStore {
         principal: money(principal, info.currency),
         outstanding: money(Math.max(add(principal, -repaid), 0), info.currency),
         openedAt: oldest.date,
-        accountName: tranches[0]?.accountName ?? 'Счёт',
+        accountName: tranches[0]?.accountName ?? t('common.accountFallback'),
         tranches,
         repayments: history
       })

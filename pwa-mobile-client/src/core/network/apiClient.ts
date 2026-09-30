@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import { APIFailure, type APIError } from './apiError'
 
 export interface APIRequest {
@@ -82,7 +83,7 @@ export class APIClient {
     try {
       return JSON.parse(text) as T
     } catch (error) {
-      const details = error instanceof Error ? error.message : 'неразбираемый JSON'
+      const details = error instanceof Error ? error.message : t('net.badJSON')
       throw new APIFailure({ kind: 'decoding', details })
     }
   }

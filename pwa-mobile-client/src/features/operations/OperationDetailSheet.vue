@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, ref } from 'vue'
 import AppButton from '@/design/AppButton.vue'
 import AppIcon from '@/design/AppIcon.vue'
@@ -42,16 +43,15 @@ async function confirmDeletion(): Promise<void> {
 <template>
   <SheetView
     :open="true"
-    :title="detail?.typeLabel ?? 'Операция'"
+    :title="detail?.typeLabel ?? t('common.operation')"
     detent="medium"
-    cancel-title="Закрыть"
+    :cancel-title="t('common.close')"
     @close="emit('close')"
   >
     <EmptyState
       v-if="!detail"
-      title="Операция не найдена"
+      :title="t('common.operationNotFound')"
       symbol="questionmark.circle"
-      description="Возможно, она была удалена."
     />
 
     <div v-else class="detail">
@@ -70,7 +70,7 @@ async function confirmDeletion(): Promise<void> {
         </div>
       </div>
 
-      <FormCard title="Операция">
+      <FormCard :title="t('common.operation')">
         <template v-for="(field, index) in detail.fields" :key="field.title">
           <FormDivider v-if="index > 0" />
           <FieldRow :symbol="field.symbolName">
@@ -81,7 +81,7 @@ async function confirmDeletion(): Promise<void> {
 
         <FormDivider />
         <FieldRow :symbol="syncSymbol(detail.syncState) ?? 'checkmark.icloud'">
-          <span>Выгрузка</span>
+          <span>{{ t('ops.syncStatus') }}</span>
           <span class="detail__value" :class="{ 'detail__value--failed': isFailed(detail.syncState) }">
             {{ detailSyncTitle(detail.syncState) }}
           </span>
@@ -90,8 +90,8 @@ async function confirmDeletion(): Promise<void> {
         <template v-if="detail.debtID && hasDebt">
           <FormDivider />
           <FieldRow symbol="person.text.rectangle" as="button" @click="emit('openDebt', detail.debtID!)">
-            <span>Долг</span>
-            <span class="detail__value secondary">Открыть</span>
+            <span>{{ t('common.debt') }}</span>
+            <span class="detail__value secondary">{{ t('common.open') }}</span>
             <template #accessory>
               <AppIcon name="chevron.right" :size="14" />
             </template>
@@ -99,7 +99,7 @@ async function confirmDeletion(): Promise<void> {
         </template>
       </FormCard>
 
-      <FormCard v-if="detail.note" title="Описание">
+      <FormCard v-if="detail.note" :title="t('common.description')">
         <FieldRow symbol="text.alignleft">
           <span>{{ detail.note }}</span>
         </FieldRow>
@@ -110,12 +110,12 @@ async function confirmDeletion(): Promise<void> {
       <div class="detail__actions">
         <AppButton v-if="detail.isEditable" full-width @click="emit('edit', operationId)">
           <AppIcon name="pencil" :size="18" />
-          Изменить
+          {{ t('common.edit') }}
         </AppButton>
 
         <AppButton variant="glass" tone="danger" full-width @click="isConfirmingDeletion = true">
           <AppIcon name="trash" :size="18" />
-          Удалить
+          {{ t('common.delete') }}
         </AppButton>
       </div>
     </template>
@@ -123,7 +123,7 @@ async function confirmDeletion(): Promise<void> {
 
   <ConfirmDialog
     :open="isConfirmingDeletion"
-    title="Удалить операцию?"
+    :title="t('ops.deleteTitle')"
     :message="deletionWarning(operationId, store)"
     @confirm="confirmDeletion"
     @cancel="isConfirmingDeletion = false"

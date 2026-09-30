@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import AppButton from '@/design/AppButton.vue'
+import { t } from '@/core/i18n'
+import { computed } from 'vue'
 import AppIcon from '@/design/AppIcon.vue'
 import EmptyState from '@/design/EmptyState.vue'
 import FieldRow from '@/design/FieldRow.vue'
 import FormCard from '@/design/FormCard.vue'
 import FormDivider from '@/design/FormDivider.vue'
 import SheetView from '@/design/SheetView.vue'
-import RepaymentSheet from './RepaymentSheet.vue'
 import { dayMonth, fullDate } from '@/core/model/dates'
 import { isFailed, syncSymbol, type DebtDirection } from '@/core/model/ledger'
 import { formatBalance, formatMoney } from '@/core/model/money'
@@ -24,8 +23,6 @@ import {
 const props = defineProps<{ debtId: string }>()
 const emit = defineEmits<{ close: [] }>()
 
-const isRepaying = ref(false)
-
 const debt = computed(() => store.debt(props.debtId))
 
 function trancheAmount(tranche: DebtTranche, direction: DebtDirection): string {
@@ -40,33 +37,32 @@ function repaymentAmount(repayment: DebtRepayment, direction: DebtDirection): st
 <template>
   <SheetView
     :open="true"
-    :title="debt?.counterparty ?? 'Долг'"
-    cancel-title="Назад"
+    :title="debt?.counterparty ?? t('common.debt')"
+    :cancel-title="t('common.back')"
     @close="emit('close')"
   >
     <EmptyState
       v-if="!debt"
-      title="Долг не найден"
+      :title="t('debt.notFound')"
       symbol="questionmark.circle"
-      description="Возможно, операция, открывшая его, была удалена."
     />
 
     <div v-else class="debt">
       <div class="debt__header">
         <p class="debt__total numeric">{{ formatBalance(debt.outstanding.amount, debt.outstanding.currency) }}</p>
-        <p class="text-subheadline secondary">{{ isDebtClosed(debt) ? 'Долг закрыт' : 'Остаток' }}</p>
+        <p class="text-subheadline secondary">{{ isDebtClosed(debt) ? t('debt.isClosed') : t('debt.remaining') }}</p>
       </div>
 
-      <FormCard title="Долг">
+      <FormCard :title="t('common.debt')">
         <FieldRow symbol="arrow.left.arrow.right">
-          <span>Направление</span>
+          <span>{{ t('common.direction') }}</span>
           <span class="debt__value secondary">{{ debtDirectionTitle(debt.direction) }}</span>
         </FieldRow>
 
         <FormDivider />
 
         <FieldRow symbol="banknote">
-          <span>{{ isDebtAggregated(debt) ? 'Всего' : 'Сумма' }}</span>
+          <span>{{ isDebtAggregated(debt) ? t('debt.total') : t('debt.amount') }}</span>
           <span class="debt__value secondary numeric">
             {{ formatBalance(debt.principal.amount, debt.principal.currency) }}
           </span>
@@ -75,27 +71,27 @@ function repaymentAmount(repayment: DebtRepayment, direction: DebtDirection): st
         <FormDivider />
 
         <FieldRow symbol="circle.dashed">
-          <span>Состояние</span>
+          <span>{{ t('debt.state') }}</span>
           <span class="debt__value secondary">{{ debtStateTitle(debt) }}</span>
         </FieldRow>
 
         <FormDivider />
 
         <FieldRow symbol="calendar">
-          <span>Открыт</span>
+          <span>{{ t('debt.open') }}</span>
           <span class="debt__value secondary">{{ fullDate(new Date(debt.openedAt)) }}</span>
         </FieldRow>
 
         <template v-if="!isDebtAggregated(debt)">
           <FormDivider />
           <FieldRow symbol="creditcard">
-            <span>Счёт</span>
+            <span>{{ t('common.account') }}</span>
             <span class="debt__value secondary">{{ debt.accountName }}</span>
           </FieldRow>
         </template>
       </FormCard>
 
-      <FormCard v-if="isDebtAggregated(debt)" title="Записи">
+      <FormCard v-if="isDebtAggregated(debt)" :title="t('debt.entries')">
         <template v-for="(tranche, index) in debt.tranches" :key="tranche.id">
           <FormDivider v-if="index > 0" />
 
@@ -120,9 +116,9 @@ function repaymentAmount(repayment: DebtRepayment, direction: DebtDirection): st
         </template>
       </FormCard>
 
-      <p v-if="debt.repayments.length === 0" class="debt__empty text-footnote secondary">Погашений пока нет</p>
+      <p v-if="debt.repayments.length === 0" class="debt__empty text-footnote secondary">{{ t('debt.noRepayments') }}</p>
 
-      <FormCard v-else title="Погашения">
+      <FormCard v-else :title="t('debt.repayments')">
         <template v-for="(repayment, index) in debt.repayments" :key="repayment.id">
           <FormDivider v-if="index > 0" />
 
@@ -146,12 +142,8 @@ function repaymentAmount(repayment: DebtRepayment, direction: DebtDirection): st
       </FormCard>
     </div>
 
-    <template v-if="debt && !isDebtClosed(debt)" #bottom>
-      <AppButton full-width @click="isRepaying = true">Погасить</AppButton>
-    </template>
   </SheetView>
 
-  <RepaymentSheet v-if="isRepaying && debt" :debt="debt" @close="isRepaying = false" />
 </template>
 
 <style scoped>

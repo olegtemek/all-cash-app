@@ -1,3 +1,4 @@
+import { t } from '@/core/i18n'
 import type { CurrencyCode, Money } from './money'
 import type { PaletteColor } from './palette'
 
@@ -33,11 +34,11 @@ export function syncSymbol(state: SyncState): string | null {
 export function syncSpokenNote(state: SyncState): string | null {
   switch (state.kind) {
     case 'pending':
-      return 'не выгружено'
+      return t('sync.spoken.pending')
     case 'synced':
       return null
     case 'failed':
-      return `ошибка выгрузки: ${state.reason}`
+      return t('sync.spoken.failed', { reason: state.reason })
   }
 }
 
@@ -80,11 +81,11 @@ export function categoryApplies(category: Category, kind: CategoryKind): boolean
 }
 
 export function kindTitle(kind: CategoryKind): string {
-  return kind === 'expense' ? 'Расход' : 'Доход'
+  return kind === 'expense' ? t('common.expense') : t('common.income')
 }
 
 export function kindPluralTitle(kind: CategoryKind): string {
-  return kind === 'expense' ? 'Категории расходов' : 'Категории доходов'
+  return kind === 'expense' ? t('kind.expenseCategories') : t('kind.incomeCategories')
 }
 
 export function kindsTitle(kinds: CategoryKind[]): string {

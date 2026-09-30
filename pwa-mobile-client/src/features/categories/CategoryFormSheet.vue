@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, ref } from 'vue'
 import AppButton from '@/design/AppButton.vue'
 import AppIcon from '@/design/AppIcon.vue'
@@ -29,8 +30,8 @@ const isSaving = ref(false)
 const isTyping = ref(false)
 const isConfirmingDeletion = ref(false)
 
-const title = computed(() => (edited.value ? 'Категория' : 'Новая категория'))
-const submitTitle = computed(() => (edited.value ? 'Сохранить' : 'Создать'))
+const title = computed(() => (edited.value ? t('cat.title') : t('common.newCategory')))
+const submitTitle = computed(() => (edited.value ? t('common.save') : t('common.create')))
 
 const existingNames = computed(() => kinds.value.flatMap((kind) => store.categoryNames(kind, edited.value?.id ?? null)))
 
@@ -100,21 +101,21 @@ async function submit(): Promise<void> {
 
         <div class="form__preview-text">
           <p class="text-headline" :class="{ secondary: name.length === 0 }">
-            {{ name.length === 0 ? 'Без названия' : name }}
+            {{ name.length === 0 ? t('cat.noName') : name }}
           </p>
           <p class="text-footnote secondary">
-            {{ kinds.length === 0 ? 'Тип не выбран' : kindsTitle(kinds) }}
+            {{ kinds.length === 0 ? t('cat.noType') : kindsTitle(kinds) }}
           </p>
         </div>
       </div>
 
-      <FormCard title="Категория">
+      <FormCard :title="t('cat.title')">
         <FieldRow symbol="textformat" :is-active="isTyping">
           <input
             v-model="name"
             class="form__input"
             type="text"
-            placeholder="Например, Продукты"
+            :placeholder="t('cat.namePlaceholder')"
             @focus="isTyping = true"
             @blur="isTyping = false"
             @input="error = null"
@@ -141,7 +142,7 @@ async function submit(): Promise<void> {
         </FieldRow>
       </FormCard>
 
-      <FormCard title="Иконка">
+      <FormCard :title="t('cat.icon')">
         <div class="form__grid">
           <button
             v-for="symbol in symbolNames"
@@ -159,7 +160,7 @@ async function submit(): Promise<void> {
         </div>
       </FormCard>
 
-      <FormCard title="Цвет">
+      <FormCard :title="t('cat.color')">
         <div class="form__grid form__grid--colors">
           <button
             v-for="item in catalogColors"
@@ -178,15 +179,6 @@ async function submit(): Promise<void> {
 
       <div class="form__notes">
         <InlineMessage v-if="error" kind="error" :text="categoryErrorText(error)" />
-        <InlineMessage
-          kind="info"
-          text="Отметьте оба типа, если категория нужна и в расходах, и в доходах — например «Подарки»."
-        />
-        <InlineMessage
-          v-if="edited"
-          kind="info"
-          text="Записанные операции останутся в этой категории и покажут новое название."
-        />
       </div>
     </div>
 
@@ -203,7 +195,7 @@ async function submit(): Promise<void> {
           @click="isConfirmingDeletion = true"
         >
           <AppIcon name="trash" :size="18" />
-          Удалить
+          {{ t('common.delete') }}
         </AppButton>
       </div>
     </template>
@@ -211,8 +203,8 @@ async function submit(): Promise<void> {
 
   <ConfirmDialog
     :open="isConfirmingDeletion"
-    title="Удалить категорию?"
-    message="Записанные операции останутся, но будут показаны без категории."
+    :title="t('cat.deleteTitle')"
+    :message="t('cat.deleteMessage')"
     @confirm="confirmDeletion"
     @cancel="isConfirmingDeletion = false"
   />

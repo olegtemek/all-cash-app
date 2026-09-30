@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/core/i18n'
 import { computed, onMounted, ref } from 'vue'
 import AppButton from '@/design/AppButton.vue'
 import AppIcon from '@/design/AppIcon.vue'
@@ -10,7 +11,7 @@ import ScreenHeader from '@/design/ScreenHeader.vue'
 import SegmentedControl from '@/design/SegmentedControl.vue'
 import CategoryOperationsView from './CategoryOperationsView.vue'
 import SpendingDonut from './SpendingDonut.vue'
-import { AnalyticsPeriod, operationsWording, shareTitle } from '@/core/model/analytics'
+import { AnalyticsPeriod, operationsWording, periodInSentence, shareTitle } from '@/core/model/analytics'
 import { formatBalance, preferredCurrency, type CurrencyCode } from '@/core/model/money'
 import { paletteVar } from '@/core/model/palette'
 import { ledgerStore as store } from '@/core/store/ledgerStore'
@@ -75,18 +76,18 @@ onMounted(() => {
 
 <template>
   <div class="screen">
-    <ScreenHeader title="Аналитика" />
+    <ScreenHeader :title="t('tabs.analytics')" />
 
     <LoadingView v-if="phase.kind === 'loading'" />
 
     <EmptyState
       v-else-if="phase.kind === 'failed'"
-      title="Аналитика не открылась"
+      :title="t('an.failed')"
       symbol="exclamationmark.triangle"
       :description="phase.message"
     >
       <template #actions>
-        <AppButton @click="store.load()">Повторить</AppButton>
+        <AppButton @click="store.load()">{{ t('common.retry') }}</AppButton>
       </template>
     </EmptyState>
 
@@ -97,7 +98,7 @@ onMounted(() => {
             type="button"
             class="period__step"
             :disabled="!canGoBack"
-            aria-label="Предыдущий месяц"
+            :aria-label="t('an.prevMonth')"
             @click="shift(-1)"
           >
             <AppIcon name="chevron.left" :size="18" />
@@ -106,7 +107,7 @@ onMounted(() => {
           <select
             class="period__select text-headline"
             :value="String(period.id)"
-            aria-label="Месяц аналитики"
+            :aria-label="t('an.month')"
             @change="selectPeriod(($event.target as HTMLSelectElement).value)"
           >
             <option v-for="item in availablePeriods" :key="item.id" :value="String(item.id)">
@@ -118,7 +119,7 @@ onMounted(() => {
             type="button"
             class="period__step"
             :disabled="!canGoForward"
-            aria-label="Следующий месяц"
+            :aria-label="t('an.nextMonth')"
             @click="shift(1)"
           >
             <AppIcon name="chevron.right" :size="18" />
@@ -128,7 +129,7 @@ onMounted(() => {
         <SegmentedControl
           v-if="currencies.length > 1"
           :model-value="currency"
-          label="Валюта"
+          :label="t('common.currency')"
           :options="currencies.map((code) => ({ value: code, title: code }))"
           @update:model-value="chosenCurrency = $event"
         />
@@ -136,24 +137,24 @@ onMounted(() => {
 
       <EmptyState
         v-if="report.categories.length === 0"
-        title="Расходов нет"
+        :title="t('an.noExpenses')"
         symbol="chart.pie"
         :description="
           currencies.length > 1
-            ? `За ${period.title.toLowerCase()} нет расходов в валюте ${currency}.`
-            : `За ${period.title.toLowerCase()} расходов не записано.`
+            ? t('an.noExpensesCurrency', { period: periodInSentence(period.title), currency })
+            : t('an.noExpensesPeriod', { period: periodInSentence(period.title) })
         "
       />
 
       <div v-else class="body">
         <div class="total">
           <p class="total__value numeric">{{ formatBalance(report.total.amount, report.total.currency) }}</p>
-          <p class="text-subheadline secondary">Расходы за месяц</p>
+          <p class="text-subheadline secondary">{{ t('an.monthExpenses') }}</p>
         </div>
 
         <SpendingDonut :categories="report.categories" />
 
-        <FormCard title="Категории">
+        <FormCard :title="t('common.categories')">
           <template v-for="(spending, index) in report.categories" :key="spending.id">
             <FormDivider v-if="index > 0" />
 
