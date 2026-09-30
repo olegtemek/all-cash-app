@@ -253,11 +253,54 @@ export class LedgerStore {
         operations: snapshot.operations.filter(isDeleted)
       }
 
+      await this.repairCategoryKinds()
+
       this.didLoad = true
       this.rebuild()
       this.phase.value = { kind: 'ready' }
     } catch (error) {
       this.phase.value = { kind: 'failed', message: errorMessage(error) }
+    }
+  }
+
+  // Раньше категория могла иметь два типа, а сервер хранит один (expense, если он есть).
+  // Приводим локальные категории к серверному виду, а операции с другим типом
+  // переносим на парную категорию с тем же именем и отправляем заново.
+  private async repairCategoryKinds(): Promise<void> {
+    this.categoryList = this.categoryList.map((category) => {
+      if (category.kinds.length <= 1) return category
+      return { ...category, kinds: [category.kinds.includes('expense') ? 'expense' : category.kinds[0]!] }
+    })
+
+    const siblings = new Map<string, Category>()
+    for (const category of this.categoryList) {
+      siblings.set(`${category.name.toLowerCase()}|${category.kinds[0]}`, category)
+    }
+
+    for (const operation of this.operations) {
+      const payload = operation.payload
+      if (payload.kind !== 'expense' && payload.kind !== 'income') continue
+
+      const current = this.categoryList.find((category) => category.id === payload.category)
+      if (!current || categoryApplies(current, payload.kind)) continue
+
+      const key = `${current.name.toLowerCase()}|${payload.kind}`
+      let sibling = siblings.get(key)
+      if (!sibling) {
+        sibling =
+          (await this.createSingleKindCategory(current.name, payload.kind, current.symbolName, current.color)) ??
+          undefined
+        if (!sibling) continue
+        siblings.set(key, sibling)
+      }
+
+      const moved: MoneyOperation = {
+        ...operation,
+        payload: { ...payload, category: sibling.id },
+        syncState: pendingState
+      }
+      await this.repository.updateOperation(moved)
+      this.operations = this.operations.map((item) => (item.id === moved.id ? moved : item))
     }
   }
 
