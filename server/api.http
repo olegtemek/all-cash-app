@@ -1,5 +1,8 @@
 @host = http://localhost:8080
 @login = olegtemek
+@password = secret123
+# Токен сессии из ответа /auth/login или /auth/register
+@token = paste-token-here
 
 ###
 GET {{host}}/health
@@ -8,14 +11,15 @@ GET {{host}}/health
 OPTIONS {{host}}/push
 Origin: http://localhost:5173
 Access-Control-Request-Method: POST
-Access-Control-Request-Headers: content-type, x-login
+Access-Control-Request-Headers: content-type, authorization
 
 ###
 POST {{host}}/auth/register
 Content-Type: application/json
 
 {
-  "login": "{{login}}"
+  "login": "{{login}}",
+  "password": "{{password}}"
 }
 
 ###
@@ -23,17 +27,18 @@ POST {{host}}/auth/login
 Content-Type: application/json
 
 {
-  "login": "{{login}}"
+  "login": "{{login}}",
+  "password": "{{password}}"
 }
 
 ###
 GET {{host}}/pull?since=20&limit=2000
-X-Login: {{login}}
+Authorization: Bearer {{token}}
 
 ###
 POST {{host}}/push
 Content-Type: application/json
-X-Login: {{login}}
+Authorization: Bearer {{token}}
 
 {
   "accounts": [
@@ -80,4 +85,12 @@ X-Login: {{login}}
 
 ###
 GET {{host}}/export/csv
-X-Login: {{login}}
+Authorization: Bearer {{token}}
+
+###
+POST {{host}}/auth/logout
+Authorization: Bearer {{token}}
+
+###
+POST {{host}}/auth/logout-all
+Authorization: Bearer {{token}}

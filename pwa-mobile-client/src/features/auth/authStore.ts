@@ -1,14 +1,15 @@
 import { t } from '@/core/i18n'
 import { computed, ref } from 'vue'
 import { APIClient } from '@/core/network/apiClient'
-import { asAPIError, apiErrorText, type APIError } from '@/core/network/apiError'
-import type { HealthResponseDTO, LoginResponseDTO, RegisterResponseDTO } from '@/core/network/dto'
+import { APIFailure, asAPIError, apiErrorText, isSessionExpired, type APIError } from '@/core/network/apiError'
+import type { HealthResponseDTO, LoginRequestDTO, LoginResponseDTO } from '@/core/network/dto'
 import { isHealthy } from '@/core/network/dto'
 import { AuthRules, authErrorText, type AuthError } from '@/core/model/rules'
 
 export interface UserSession {
   login: string
   server: string
+  token: string
   signedInAt: string
 }
 
@@ -63,8 +64,10 @@ export function authErrorFromAPI(error: APIError): AuthError {
           return { kind: 'unknownLogin' }
         case 'login_taken':
           return { kind: 'loginTaken' }
+        case 'wrong_password':
+          return { kind: 'wrongPassword' }
         case 'bad_request':
-          return { kind: 'shortLogin' }
+          return error.message.length > 0 ? { kind: 'unknown', message: error.message } : { kind: 'shortLogin' }
         case 'invalid_token':
           return { kind: 'unknownLogin' }
         default:
@@ -104,7 +107,9 @@ export class LocalSessionStore implements SessionStore {
   read(): UserSession | null {
     try {
       const raw = localStorage.getItem(keys.session)
-      return raw ? (JSON.parse(raw) as UserSession) : null
+      const session = raw ? (JSON.parse(raw) as Partial<UserSession>) : null
+      if (!session?.token || !session.login || !session.server) return null
+      return session as UserSession
     } catch {
       return null
     }
@@ -141,10 +146,13 @@ export class InMemorySessionStore implements SessionStore {
 export class AuthStore {
   readonly server = ref('')
   readonly login = ref('')
+  readonly password = ref('')
   readonly session = ref<UserSession | null>(null)
   readonly serverStatus = ref<ServerStatus>({ kind: 'unknown' })
   readonly isBusy = ref(false)
   readonly error = ref<AuthError | null>(null)
+  readonly isSigningOutEverywhere = ref(false)
+  readonly signOutEverywhereError = ref<string | null>(null)
 
   readonly isSignedIn = computed(() => this.session.value !== null)
   readonly canRegister = computed(() => this.error.value?.kind === 'unknownLogin' && !this.isBusy.value)
@@ -172,6 +180,10 @@ export class AuthStore {
     if (this.login.value === value) return
     this.login.value = value
     writeString(keys.login, value)
+  }
+
+  setPassword(value: string): void {
+    this.password.value = value
   }
 
   async checkServer(): Promise<void> {
@@ -210,7 +222,8 @@ export class AuthStore {
     this.isBusy.value = true
 
     try {
-      const session = await openSession(this.server.value, this.login.value, path)
+      const session = await openSession(this.server.value, this.login.value, this.password.value, path)
+      this.password.value = ''
       this.setLogin(session.login)
       this.setServer(session.server)
       this.serverStatus.value = { kind: 'available' }
@@ -226,10 +239,39 @@ export class AuthStore {
   }
 
   signOut(): void {
+    const session = this.session.value
+    if (session) void closeSession(session)
+
     this.session.value = null
     this.error.value = null
     this.serverStatus.value = { kind: 'unknown' }
     this.sessions.clear()
+  }
+
+  async signOutEverywhere(): Promise<boolean> {
+    const session = this.session.value
+    if (!session || this.isSigningOutEverywhere.value) return false
+
+    this.signOutEverywhereError.value = null
+    this.isSigningOutEverywhere.value = true
+
+    try {
+      await closeAllSessions(session)
+    } catch (error) {
+      const apiError = asAPIError(error)
+      if (!apiError || !isSessionExpired(apiError)) {
+        this.signOutEverywhereError.value = apiError ? apiErrorText(apiError) : t('common.unreachableServer')
+        return false
+      }
+    } finally {
+      this.isSigningOutEverywhere.value = false
+    }
+
+    this.session.value = null
+    this.error.value = null
+    this.serverStatus.value = { kind: 'unknown' }
+    this.sessions.clear()
+    return true
   }
 
   sessionExpired(): void {
@@ -259,32 +301,46 @@ async function checkServerStatus(server: string): Promise<ServerStatus> {
   }
 }
 
-async function openSession(server: string, login: string, path: string): Promise<UserSession> {
+async function closeSession(session: UserSession): Promise<void> {
+  const client = APIClient.create(session.server)
+  if (!client) return
+  try {
+    await client.send({ method: 'POST', path: 'auth/logout', token: session.token })
+  } catch {
+  }
+}
+
+async function closeAllSessions(session: UserSession): Promise<void> {
+  const client = APIClient.create(session.server)
+  if (!client) throw new APIFailure({ kind: 'malformedServer' })
+  await client.sendExpectingSuccess({ method: 'POST', path: 'auth/logout-all', token: session.token })
+}
+
+async function openSession(server: string, login: string, password: string, path: string): Promise<UserSession> {
   const normalized = AuthRules.normalizedServer(server)
   const client = normalized ? APIClient.create(normalized) : null
   if (!client || !normalized) throw { kind: 'malformedServer' } satisfies AuthError
 
-  const validation = AuthRules.validateLogin(login)
+  const validation = AuthRules.validateLogin(login) ?? AuthRules.validatePassword(password)
   if (validation) throw validation
 
+  let dto: LoginResponseDTO
   try {
-    const response = await client.send({
-      method: 'POST',
-      path,
-      body: { login: AuthRules.normalizedLogin(login) }
-    })
-    client.validate(response)
-
-    const accepted =
-      client.tryDecode<LoginResponseDTO>(response.data)?.login ??
-      client.tryDecode<RegisterResponseDTO>(response.data)?.login ??
-      AuthRules.normalizedLogin(login)
-
-    return { login: accepted, server: normalized, signedInAt: new Date().toISOString() }
+    const body: LoginRequestDTO = { login: AuthRules.normalizedLogin(login), password }
+    dto = await client.sendJSON<LoginResponseDTO>({ method: 'POST', path, body })
   } catch (error) {
     const apiError = asAPIError(error)
     if (apiError) throw authErrorFromAPI(apiError)
     throw { kind: 'unknown', message: error instanceof Error ? error.message : String(error) } satisfies AuthError
+  }
+
+  if (!dto.token) throw { kind: 'unknown', message: t('net.unexpected', { details: 'token' }) } satisfies AuthError
+
+  return {
+    login: dto.login || AuthRules.normalizedLogin(login),
+    server: normalized,
+    token: dto.token,
+    signedInAt: new Date().toISOString()
   }
 }
 

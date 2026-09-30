@@ -226,7 +226,7 @@ async function pullPage(cursor: number, session: UserSession): Promise<PullPage>
     const dto = await client.sendJSON<PullResponseDTO>({
       path: 'pull',
       query: { since: String(cursor), limit: String(pageLimit) },
-      login: session.login
+      token: session.token
     })
     return pullPageFromDTO(dto)
   } catch (error) {
@@ -243,7 +243,7 @@ async function pushChanges(changes: LedgerSnapshot, session: UserSession): Promi
     const dto = await client.sendJSON<PushResponseDTO>({
       method: 'POST',
       path: 'push',
-      login: session.login,
+      token: session.token,
       body: pushRequestDTO(changes)
     })
     return pushResultFromDTO(dto)

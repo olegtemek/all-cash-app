@@ -10,6 +10,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/shopspring/decimal v1.4.0
 	github.com/stretchr/testify v1.12.1
+	golang.org/x/crypto v0.57.0
 	modernc.org/sqlite v1.60.0
 )
 

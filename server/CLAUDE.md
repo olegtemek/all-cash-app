@@ -8,8 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 web PWA in `../pwa-mobile-client`). It keeps a server-side copy of every user's data, syncs it with the device in both
 directions via a cursor-based protocol, and produces a CSV export. Go + single-file SQLite, no cgo.
 
-The server is designed to run on a LAN only: login is a bare login string with no password, and
-`POST /auth/register` is unauthenticated. See `README.md` (in Russian) for the deployment constraints
+The server is designed to run on a LAN only: there is no built-in HTTPS, and `POST /auth/register`
+is unauthenticated. Login is login + password, sessions are non-expiring server-side sessions (ADR-0002). See `README.md` (in Russian) for the deployment constraints
 this implies — do not "improve" the port exposure or open `/auth/register` to the internet without the
 protections described there.
 
@@ -17,9 +17,9 @@ protections described there.
 
 - `ARCHITECTURE.md` — the full architecture: boundaries, layers, data flows, schema, invariants, known
   gaps. **Read it before changing anything structural.**
-- `docs/adr/` — Architecture Decision Records. Currently one file, `0001-backend-architecture.md`, which
-  holds every current decision as a numbered section (`п. 1` … `п. 23`) with context, consequences and
-  rejected options. `ARCHITECTURE.md` cites it as `ADR-0001, п. N`.
+- `docs/adr/` — Architecture Decision Records. `0001-backend-architecture.md` holds the base decisions as
+  numbered sections (`п. 1` … `п. 23`) with context, consequences and rejected options; `ARCHITECTURE.md`
+  cites it as `ADR-0001, п. N`. `0002-password-and-sessions.md` replaces п. 11 (password login, sessions).
 - `README.md` — deployment and operations (in Russian).
 
 **Work against the ADR.** Before a structural change, read `docs/adr/0001-backend-architecture.md` and
@@ -121,14 +121,20 @@ repayment arriving in the same push can resolve its `debt_id`.
 
 ### Auth
 
-`X-Login: <login>` on `/pull`, `/push`, `/export/csv`. The middleware resolves it to a user and puts a
-`session` in the request context; handlers read it with `sessionFrom`. Logins are normalized with
-`models.NormalizeLogin` (trim + lowercase) — the same rule as the client — everywhere, including
-`/auth/login` and `/auth/register`.
+See ADR-0002. `/auth/login` and `/auth/register` take `{login, password}`, open a new session and return
+its `token` (32 random bytes, base64url). Sessions deliberately **never expire**; only `POST /auth/logout`
+closes one, `POST /auth/logout-all` closes all of the user's sessions. `/pull`, `/push`, `/export/csv`,
+`/auth/logout`, `/auth/logout-all` require `Authorization: Bearer <token>`; the
+`authorize` middleware resolves it via `usecase.Authenticate` and puts a `session` in the request context;
+handlers read it with `sessionFrom`. `usecase/auth.go` hashes passwords with argon2id
+(`golang.org/x/crypto/argon2`, PHC string) and tokens with SHA-256; `repository` only stores the finished
+hashes (`users.password_hash`, `sessions.token_hash`) and never sees a raw password or token. There is
+no compatibility with pre-password databases: recreate them. Logins are normalized with
+`models.NormalizeLogin` (trim + lowercase) everywhere.
 
-Two distinct 401 codes, and the client behaves differently for each: `invalid_token` (unknown/missing
-`X-Login`) makes it drop the session, `unknown_login` (from `/auth/login`) shows an error on the login
-screen. Keep them separate.
+Distinct 401 codes, and the client behaves differently for each: `invalid_token` (unknown or closed
+session) makes it drop the session — the only thing that should; `unknown_login` and `wrong_password`
+(from `/auth/login`) show an error on the login screen. Keep them separate.
 
 ### Errors
 

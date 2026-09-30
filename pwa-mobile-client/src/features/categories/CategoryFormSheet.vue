@@ -142,6 +142,23 @@ async function submit(): Promise<void> {
         </FieldRow>
       </FormCard>
 
+      <FormCard :title="t('cat.color')">
+        <div class="form__grid form__grid--colors">
+          <button
+            v-for="item in catalogColors"
+            :key="item"
+            type="button"
+            class="form__color"
+            :style="{ background: paletteVar(item) }"
+            :aria-label="item"
+            :aria-pressed="item === color"
+            @click="color = item"
+          >
+            <AppIcon v-if="item === color" name="checkmark" :size="14" />
+          </button>
+        </div>
+      </FormCard>
+
       <FormCard :title="t('cat.icon')">
         <div class="form__grid">
           <button
@@ -156,23 +173,6 @@ async function submit(): Promise<void> {
             @click="symbolName = symbol"
           >
             <AppIcon :name="symbol" :size="20" />
-          </button>
-        </div>
-      </FormCard>
-
-      <FormCard :title="t('cat.color')">
-        <div class="form__grid form__grid--colors">
-          <button
-            v-for="item in catalogColors"
-            :key="item"
-            type="button"
-            class="form__color"
-            :style="{ background: paletteVar(item) }"
-            :aria-label="item"
-            :aria-pressed="item === color"
-            @click="color = item"
-          >
-            <AppIcon v-if="item === color" name="checkmark" :size="14" />
           </button>
         </div>
       </FormCard>

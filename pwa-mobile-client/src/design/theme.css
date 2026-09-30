@@ -51,18 +51,40 @@
   --danger-glass: rgba(255, 59, 48, 0.82);
     --glass-neutral: rgba(58, 58, 64, 0.52);
 
+  --palette-redLight: #ff6961;
   --palette-red: #ff3b30;
+  --palette-redDark: #c4221a;
+  --palette-orangeLight: #ffb340;
   --palette-orange: #ff9500;
+  --palette-orangeDark: #c96a00;
   --palette-yellow: #ffcc00;
+  --palette-yellowDark: #d4a800;
+  --palette-greenLight: #6ad88a;
   --palette-green: #34c759;
+  --palette-greenDark: #248a3d;
   --palette-mint: #00c7be;
+  --palette-mintDark: #00918b;
+  --palette-tealLight: #6ac4dc;
   --palette-teal: #30b0c7;
+  --palette-tealDark: #1d7f99;
+  --palette-blueLight: #4da3ff;
   --palette-blue: #007aff;
+  --palette-blueDark: #0055d4;
+  --palette-indigoLight: #8583e8;
   --palette-indigo: #5856d6;
+  --palette-indigoDark: #3634a3;
+  --palette-purpleLight: #c987ec;
   --palette-purple: #af52de;
+  --palette-purpleDark: #8231b8;
+  --palette-pinkLight: #ff6b8a;
   --palette-pink: #ff2d55;
+  --palette-pinkDark: #d30f45;
+  --palette-brownLight: #c0a07a;
   --palette-brown: #a2845e;
+  --palette-brownDark: #7f6545;
+  --palette-graphiteLight: #aeaeb2;
   --palette-graphite: #8e8e93;
+  --palette-graphiteDark: #636366;
 
   color-scheme: light dark;
 }
@@ -98,18 +120,40 @@
     --danger-glass: rgba(255, 69, 58, 0.82);
     --glass-neutral: rgba(255, 255, 255, 0.13);
 
+    --palette-redLight: #ff7a73;
     --palette-red: #ff453a;
+    --palette-redDark: #d63a31;
+    --palette-orangeLight: #ffb84d;
     --palette-orange: #ff9f0a;
+    --palette-orangeDark: #d97a0a;
     --palette-yellow: #ffd60a;
+    --palette-yellowDark: #e0b400;
+    --palette-greenLight: #6ee28f;
     --palette-green: #30d158;
+    --palette-greenDark: #28a745;
     --palette-mint: #63e6e2;
+    --palette-mintDark: #1fb5ae;
+    --palette-tealLight: #74d0e6;
     --palette-teal: #40c8e0;
+    --palette-tealDark: #2a93ad;
+    --palette-blueLight: #5ea9ff;
     --palette-blue: #0a84ff;
+    --palette-blueDark: #0066e0;
+    --palette-indigoLight: #8e8cf0;
     --palette-indigo: #5e5ce6;
+    --palette-indigoDark: #4543b8;
+    --palette-purpleLight: #d08af5;
     --palette-purple: #bf5af2;
+    --palette-purpleDark: #9a42cf;
+    --palette-pinkLight: #ff7a95;
     --palette-pink: #ff375f;
+    --palette-pinkDark: #e0214f;
+    --palette-brownLight: #c8a882;
     --palette-brown: #ac8e68;
+    --palette-brownDark: #8a6f4e;
+    --palette-graphiteLight: #b4b4b8;
     --palette-graphite: #98989d;
+    --palette-graphiteDark: #6e6e73;
   }
 }
 

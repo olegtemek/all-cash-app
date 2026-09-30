@@ -10,13 +10,24 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const (
+	MinPasswordLen = 6
+	MaxPasswordLen = 256
+)
+
 type LoginRequest struct {
-	Login string `json:"login"`
+	Login    string `json:"login"`
+	Password string `json:"password"`
 }
 
 func (r LoginRequest) Validate() error {
 	if len([]rune(NormalizeLogin(r.Login))) < 3 {
 		return errors.New("логин короче трёх символов")
+	}
+	if length := len([]rune(r.Password)); length < MinPasswordLen {
+		return fmt.Errorf("пароль короче %d символов", MinPasswordLen)
+	} else if length > MaxPasswordLen {
+		return fmt.Errorf("пароль длиннее %d символов", MaxPasswordLen)
 	}
 	return nil
 }

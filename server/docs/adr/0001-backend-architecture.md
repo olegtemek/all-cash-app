@@ -1,6 +1,6 @@
 # ADR-0001: Архитектура сервера all-cash
 
-- Статус: Принято
+- Статус: Принято (п. 11 заменён ADR-0002, п. 23 частично заменён ADR-0002)
 - Дата: 2026-09-30
 
 ## Контекст
@@ -83,6 +83,8 @@ transport/http  ->  usecase  ->  repository
 
 ### 11. Аутентификация по логину без пароля
 
+> Заменён [ADR-0002](0002-password-and-sessions.md): вход по паролю, серверные сессии, `Authorization: Bearer <token>`.
+
 - Заголовок `X-Login` на `/pull`, `/push`, `/export/csv`. Middleware `authorize` находит пользователя и кладёт `session` в контекст.
 - Логин нормализуется `models.NormalizeLogin` (обрезка и нижний регистр) везде: `/auth/login`, `/auth/register`, `authorize`.
 - Два разных 401: `invalid_token` (клиент сбрасывает сессию) и `unknown_login` (клиент показывает ошибку на экране входа). Не смешивать.
@@ -155,6 +157,8 @@ transport/http  ->  usecase  ->  repository
 
 ### 23. CORS для веб-клиента
 
+> Заголовки CORS изменены [ADR-0002](0002-password-and-sessions.md), п. 4: `Authorization` вместо `X-Login`.
+
 - Порядок middleware: `RequestID` → `Recoverer` → `logging` → `cors` → `limitBody`.
 - Используется `github.com/go-chi/cors`. Источники — `ALL_CASH_SERVER_CORS_ORIGINS` (по умолчанию `*`), методы `GET`, `POST`, `OPTIONS`, заголовки `Content-Type` и `X-Login`, `ExposedHeaders` — `Content-Disposition`, `MaxAge` 600 с, `AllowCredentials` `false`.
 - Preflight не доходит до `authorize`; ручек `OPTIONS` в роутере нет.
@@ -175,7 +179,7 @@ transport/http  ->  usecase  ->  repository
 - PostgreSQL: отдельный процесс и обслуживание ради одного пользователя.
 - `mattn/go-sqlite3`: требует cgo и тянет libc в образ.
 - Библиотека миграций (`goose`, `golang-migrate`): зависимость и формат файлов ради схемы из четырёх таблиц.
-- Пароль или токен вместо голого логина: сознательно не делается, пока сервер живёт только в локальной сети.
+- Пароль или токен вместо голого логина: сознательно не делается, пока сервер живёт только в локальной сети. Пересмотрено в ADR-0002.
 - Атомарный push «всё или ничего»: одна плохая операция блокировала бы синхронизацию всех остальных.
 - Именованный том Docker для базы: файл недоступен обычными средствами хоста.
 - Тесты `repository` на настоящем SQLite: отказались в пользу тестов только слоя `usecase`.

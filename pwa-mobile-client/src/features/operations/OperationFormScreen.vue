@@ -14,6 +14,7 @@ import SegmentedControl from '@/design/SegmentedControl.vue'
 import SheetView from '@/design/SheetView.vue'
 import AmountDisplay from './AmountDisplay.vue'
 import AmountKeypad from './AmountKeypad.vue'
+import TrailingText from '@/design/TrailingText.vue'
 import CategoryPicker from '@/features/categories/CategoryPicker.vue'
 import {
   activeAmount,
@@ -547,7 +548,7 @@ async function submit(): Promise<void> {
           >
             <span>{{ t('form.spentAmount') }}</span>
             <span class="form__value" :class="{ 'form__value--active': draft.activeSlot === 'primary' }">
-              {{ draft.amount.display }}
+              <TrailingText :text="draft.amount.display" />
             </span>
             <span class="secondary">{{ account ? currencySymbol(account.currency) : '' }}</span>
           </FieldRow>
@@ -578,7 +579,7 @@ async function submit(): Promise<void> {
           >
             <span>{{ t('form.receivedAmount') }}</span>
             <span class="form__value" :class="{ 'form__value--active': draft.activeSlot === 'received' }">
-              {{ draft.receivedAmount.display }}
+              <TrailingText :text="draft.receivedAmount.display" />
             </span>
             <span class="secondary">{{ destinationAccount ? currencySymbol(destinationAccount.currency) : '' }}</span>
           </FieldRow>

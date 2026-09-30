@@ -2,6 +2,7 @@
 import { t } from '@/core/i18n'
 import { computed } from 'vue'
 import AppIcon from '@/design/AppIcon.vue'
+import TrailingText from '@/design/TrailingText.vue'
 import type { AmountExpression } from '@/core/model/amountExpression'
 import { currencySymbol, directionSign, formatBalance, type CurrencyCode, type Direction } from '@/core/model/money'
 
@@ -32,7 +33,7 @@ const failureText = computed(() => {
 
     <p class="amount__value">
       <span>{{ directionSign(direction) }}</span>
-      <span class="amount__number">{{ expression.display }}</span>
+      <span class="amount__number"><TrailingText :text="expression.display" /></span>
       <span class="secondary">{{ currencySymbol(currency) }}</span>
     </p>
 
@@ -80,9 +81,7 @@ const failureText = computed(() => {
 }
 
 .amount__number {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
 }
 
 .amount__note {

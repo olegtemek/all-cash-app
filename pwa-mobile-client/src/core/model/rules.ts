@@ -213,10 +213,14 @@ export type AuthError =
   | { kind: 'shortLogin' }
   | { kind: 'unknownLogin' }
   | { kind: 'loginTaken' }
+  | { kind: 'emptyPassword' }
+  | { kind: 'shortPassword' }
+  | { kind: 'wrongPassword' }
   | { kind: 'serverUnreachable' }
   | { kind: 'unknown'; message: string }
 
 export const minLoginLength = 3
+export const minPasswordLength = 6
 
 export function authErrorText(error: AuthError): string {
   switch (error.kind) {
@@ -232,6 +236,12 @@ export function authErrorText(error: AuthError): string {
       return t('err.auth.unknownLogin')
     case 'loginTaken':
       return t('err.auth.loginTaken')
+    case 'emptyPassword':
+      return t('err.auth.emptyPassword')
+    case 'shortPassword':
+      return t('err.auth.shortPassword', { min: minPasswordLength })
+    case 'wrongPassword':
+      return t('err.auth.wrongPassword')
     case 'serverUnreachable':
       return t('common.unreachableServer')
     case 'unknown':
@@ -278,6 +288,12 @@ export const AuthRules = {
     const login = raw.trim()
     if (login.length === 0) return { kind: 'emptyLogin' }
     if (login.length < minLoginLength) return { kind: 'shortLogin' }
+    return null
+  },
+
+  validatePassword(raw: string): AuthError | null {
+    if (raw.length === 0) return { kind: 'emptyPassword' }
+    if (raw.length < minPasswordLength) return { kind: 'shortPassword' }
     return null
   },
 

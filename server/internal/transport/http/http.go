@@ -74,6 +74,8 @@ func (s *Server) routes() http.Handler {
 
 	router.Group(func(secured chi.Router) {
 		secured.Use(s.authorize)
+		secured.Post("/auth/logout", s.handleLogout)
+		secured.Post("/auth/logout-all", s.handleLogoutAll)
 		secured.Get("/pull", s.handlePull)
 		secured.Post("/push", s.handlePush)
 		secured.Get("/export/csv", s.handleExportCSV)

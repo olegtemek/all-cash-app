@@ -18,6 +18,7 @@ const (
 	CodePayloadTooLarge ErrorCode = "payload_too_large"
 	CodeSchemaError     ErrorCode = "schema_error"
 	CodeLoginTaken      ErrorCode = "login_taken"
+	CodeWrongPassword   ErrorCode = "wrong_password"
 	CodeInternalError   ErrorCode = "internal_error"
 )
 
@@ -33,6 +34,7 @@ var errorSpecs = map[ErrorCode]errorSpec{
 	CodePayloadTooLarge: {http.StatusRequestEntityTooLarge, "Слишком большой запрос"},
 	CodeSchemaError:     {http.StatusUnprocessableEntity, "Нарушена схема справочников"},
 	CodeLoginTaken:      {http.StatusConflict, "Логин уже занят"},
+	CodeWrongPassword:   {http.StatusUnauthorized, "Неверный пароль"},
 	CodeInternalError:   {http.StatusInternalServerError, "Внутренняя ошибка сервера"},
 }
 
@@ -51,11 +53,13 @@ type HealthResponse struct {
 
 type LoginResponse struct {
 	Login string `json:"login"`
+	Token string `json:"token"`
 }
 
 type RegisterResponse struct {
 	UserID string `json:"userId"`
 	Login  string `json:"login"`
+	Token  string `json:"token"`
 }
 
 type AccountResponse struct {

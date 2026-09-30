@@ -9,6 +9,7 @@ import FormDivider from '@/design/FormDivider.vue'
 import InlineMessage from '@/design/InlineMessage.vue'
 import SheetView from '@/design/SheetView.vue'
 import AmountKeypad from '@/features/operations/AmountKeypad.vue'
+import TrailingText from '@/design/TrailingText.vue'
 import { AmountExpression } from '@/core/model/amountExpression'
 import { add, rounded } from '@/core/model/decimal'
 import type { Account } from '@/core/model/ledger'
@@ -184,7 +185,7 @@ async function submit(): Promise<void> {
           </template>
           <template v-else>
             <span class="form__value" :class="{ 'form__value--active': isEditingBalance }">
-              {{ balance.display }}
+              <TrailingText :text="balance.display" />
             </span>
             <span class="secondary">{{ currencySymbol(currency) }}</span>
           </template>

@@ -12,7 +12,10 @@ import (
 	"github.com/olegtemek/all-cash-server/internal/usecase"
 )
 
-const sessionHeader = "X-Login"
+const (
+	sessionHeader = "Authorization"
+	bearerPrefix  = "Bearer "
+)
 
 // preflightMaxAge — время в секундах, на которое браузер кеширует ответ на preflight.
 const preflightMaxAge = 600
@@ -46,13 +49,13 @@ type logEntry struct {
 
 func (s *Server) authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		login := strings.TrimSpace(r.Header.Get(sessionHeader))
-		if login == "" {
+		token, ok := bearerToken(r)
+		if !ok {
 			respondErrorCode(w, models.CodeInvalidToken)
 			return
 		}
 
-		user, err := s.usecase.Authenticate(r.Context(), login)
+		user, err := s.usecase.Authenticate(r.Context(), token)
 		if errors.Is(err, usecase.ErrInvalidSession) {
 			respondErrorCode(w, models.CodeInvalidToken)
 			return
@@ -69,6 +72,14 @@ func (s *Server) authorize(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), sessionKey, session{userID: user.ID, login: user.Login})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func bearerToken(r *http.Request) (string, bool) {
+	header := strings.TrimSpace(r.Header.Get(sessionHeader))
+	if len(header) <= len(bearerPrefix) || !strings.EqualFold(header[:len(bearerPrefix)], bearerPrefix) {
+		return "", false
+	}
+	return header[len(bearerPrefix):], true
 }
 
 // limitBody отклоняет запрос, заявивший слишком большое тело, и обрезает тело без

@@ -21,7 +21,7 @@ Layers under `src/`:
 
 - `core/model/` — pure domain logic, no Vue. Ledger types (`ledger.ts`), money/decimal math, analytics, validation rules, sync payload types.
 - `core/data/` — `LedgerRepository` interface (`repository.ts`) with the IndexedDB implementation (`idbRepository.ts`, via `idb`). Stores: `accounts`, `categories`, `operations`. Tracks pending changes and soft deletes for sync.
-- `core/network/` — `APIClient` (fetch wrapper, `X-Login` header, 60s timeout), DTOs, and `mapping.ts` converting DTO ↔ model. Errors are `APIFailure`/`APIError` unions.
+- `core/network/` — `APIClient` (fetch wrapper, `Authorization: Bearer <token>` header, 60s timeout), DTOs, and `mapping.ts` converting DTO ↔ model. Errors are `APIFailure`/`APIError` unions.
 - `core/store/ledgerStore.ts` — `LedgerStore` singleton (`ledgerStore`). Holds all data in memory, derives view models (`models.ts`: day groups, account/debt summaries, currency totals) into `shallowRef`s, persists through the repository.
 - `features/*` — screens plus feature stores (`authStore`, `syncStore`, `exportStore`), also module-level singleton classes exporting Vue refs.
 - `design/` — shared UI components and `theme.css`.

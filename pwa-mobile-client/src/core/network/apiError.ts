@@ -6,6 +6,7 @@ export type APIErrorCode =
   | 'payload_too_large'
   | 'schema_error'
   | 'login_taken'
+  | 'wrong_password'
   | 'internal_error'
 
 export type APIError =

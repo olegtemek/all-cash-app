@@ -14,9 +14,11 @@ import (
 )
 
 type Usecase interface {
-	Login(ctx context.Context, login string) (models.User, error)
-	Register(ctx context.Context, login string) (models.User, error)
-	Authenticate(ctx context.Context, login string) (models.User, error)
+	Login(ctx context.Context, login, password string) (usecase.Session, error)
+	Register(ctx context.Context, login, password string) (usecase.Session, error)
+	Authenticate(ctx context.Context, token string) (models.User, error)
+	Logout(ctx context.Context, token string) error
+	LogoutAll(ctx context.Context, userID string) error
 	Pull(ctx context.Context, userID string, since int64, limit int) (usecase.PullOutput, error)
 	Push(ctx context.Context, userID string, input usecase.PushInput) (models.PushResult, error)
 	ExportCSV(ctx context.Context, userID string) ([]byte, error)
@@ -96,21 +98,24 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := request.Validate(); err != nil {
-		respondErrorCode(w, models.CodeBadRequest)
+		respondError(w, http.StatusBadRequest, models.CodeBadRequest, err.Error())
 		return
 	}
 
-	user, err := s.usecase.Login(r.Context(), request.Login)
+	session, err := s.usecase.Login(r.Context(), request.Login, request.Password)
 	switch {
 	case errors.Is(err, usecase.ErrUnknownLogin):
 		respondErrorCode(w, models.CodeUnknownLogin)
+		return
+	case errors.Is(err, usecase.ErrWrongPassword):
+		respondErrorCode(w, models.CodeWrongPassword)
 		return
 	case err != nil:
 		s.fail(r, w, err)
 		return
 	}
 
-	respond(w, http.StatusOK, models.LoginResponse{Login: user.Login})
+	respond(w, http.StatusOK, models.LoginResponse{Login: session.User.Login, Token: session.Token})
 }
 
 func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -119,11 +124,11 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := request.Validate(); err != nil {
-		respondErrorCode(w, models.CodeBadRequest)
+		respondError(w, http.StatusBadRequest, models.CodeBadRequest, err.Error())
 		return
 	}
 
-	user, err := s.usecase.Register(r.Context(), request.Login)
+	session, err := s.usecase.Register(r.Context(), request.Login, request.Password)
 	switch {
 	case errors.Is(err, usecase.ErrLoginTaken):
 		respondErrorCode(w, models.CodeLoginTaken)
@@ -133,7 +138,29 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respond(w, http.StatusCreated, models.RegisterResponse{UserID: user.ID, Login: user.Login})
+	respond(w, http.StatusCreated, models.RegisterResponse{
+		UserID: session.User.ID,
+		Login:  session.User.Login,
+		Token:  session.Token,
+	})
+}
+
+func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
+	token, _ := bearerToken(r)
+	if err := s.usecase.Logout(r.Context(), token); err != nil {
+		s.fail(r, w, err)
+		return
+	}
+	respond(w, http.StatusNoContent, nil)
+}
+
+func (s *Server) handleLogoutAll(w http.ResponseWriter, r *http.Request) {
+	userID, _ := sessionFrom(r.Context())
+	if err := s.usecase.LogoutAll(r.Context(), userID); err != nil {
+		s.fail(r, w, err)
+		return
+	}
+	respond(w, http.StatusNoContent, nil)
 }
 
 func (s *Server) handlePull(w http.ResponseWriter, r *http.Request) {

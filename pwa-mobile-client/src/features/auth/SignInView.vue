@@ -16,7 +16,7 @@ import { AuthRules, authErrorText, type AuthError } from '@/core/model/rules'
 const emit = defineEmits<{ close: [] }>()
 
 const validationError = ref<AuthError | null>(null)
-const focusedField = ref<'server' | 'login' | null>(null)
+const focusedField = ref<'server' | 'login' | 'password' | null>(null)
 
 const server = computed({
   get: () => store.server.value,
@@ -28,10 +28,15 @@ const login = computed({
   set: (value: string) => store.setLogin(value)
 })
 
+const password = computed({
+  get: () => store.password.value,
+  set: (value: string) => store.setPassword(value)
+})
+
 const message = computed(() => validationError.value ?? store.error.value)
 
 const canSubmit = computed(
-  () => server.value.length > 0 && login.value.length > 0 && !store.isBusy.value
+  () => server.value.length > 0 && login.value.length > 0 && password.value.length > 0 && !store.isBusy.value
 )
 
 watch(
@@ -58,6 +63,12 @@ function validate(): boolean {
   const loginError = AuthRules.validateLogin(login.value)
   if (loginError) {
     validationError.value = loginError
+    return false
+  }
+
+  const passwordError = AuthRules.validatePassword(password.value)
+  if (passwordError) {
+    validationError.value = passwordError
     return false
   }
 
@@ -122,11 +133,30 @@ async function register(): Promise<void> {
             v-model="login"
             class="signin__input"
             type="text"
+            autocomplete="username"
             autocapitalize="none"
             autocorrect="off"
             spellcheck="false"
             :placeholder="t('auth.yourLogin')"
             @focus="focusedField = 'login'"
+            @blur="focusedField = null"
+            @input="resetValidation"
+          />
+        </FieldRow>
+      </FormCard>
+
+      <FormCard :title="t('common.password')">
+        <FieldRow symbol="person.badge.key" :is-active="focusedField === 'password'">
+          <input
+            v-model="password"
+            class="signin__input"
+            type="password"
+            autocomplete="current-password"
+            autocapitalize="none"
+            autocorrect="off"
+            spellcheck="false"
+            :placeholder="t('auth.yourPassword')"
+            @focus="focusedField = 'password'"
             @blur="focusedField = null"
             @input="resetValidation"
             @keyup.enter="submit"

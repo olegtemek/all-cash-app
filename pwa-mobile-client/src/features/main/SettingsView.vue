@@ -3,11 +3,14 @@ import { t } from '@/core/i18n'
 import { onMounted, ref, watch } from 'vue'
 import AppButton from '@/design/AppButton.vue'
 import AppIcon from '@/design/AppIcon.vue'
+import ConfirmDialog from '@/design/ConfirmDialog.vue'
 import FieldRow from '@/design/FieldRow.vue'
 import FormCard from '@/design/FormCard.vue'
 import FormDivider from '@/design/FormDivider.vue'
+import InlineMessage from '@/design/InlineMessage.vue'
 import ScreenHeader from '@/design/ScreenHeader.vue'
 import SheetView from '@/design/SheetView.vue'
+import SpinnerDot from '@/design/SpinnerDot.vue'
 import EraseDataCard from './EraseDataCard.vue'
 import CategoriesView from '@/features/categories/CategoriesView.vue'
 import ExportCard from '@/features/export/ExportCard.vue'
@@ -28,6 +31,12 @@ watch(language, (next) => {
 
 const isSigningIn = ref(false)
 const isShowingCategories = ref(false)
+const isConfirmingSignOutEverywhere = ref(false)
+
+async function signOutEverywhere(): Promise<void> {
+  isConfirmingSignOutEverywhere.value = false
+  await auth.signOutEverywhere()
+}
 
 onMounted(() => {
   void ledger.loadIfNeeded()
@@ -36,7 +45,13 @@ onMounted(() => {
 
 <template>
   <div class="screen">
-    <ScreenHeader :title="t('tabs.settings')" />
+    <ScreenHeader :title="t('tabs.settings')">
+      <template v-if="auth.isSignedIn.value" #trailing>
+        <AppButton variant="glass" tone="danger" class="screen__action" @click="auth.signOut()">
+          {{ t('settings.signOut') }}
+        </AppButton>
+      </template>
+    </ScreenHeader>
 
     <div class="screen__body">
       <FormCard :title="t('common.server')">
@@ -87,13 +102,41 @@ onMounted(() => {
         </FieldRow>
       </FormCard>
 
-      <EraseDataCard />
+      <EraseDataCard>
+        <template v-if="auth.isSignedIn.value">
+          <FormDivider />
 
-      <AppButton v-if="auth.isSignedIn.value" variant="glass" tone="danger" full-width @click="auth.signOut()">
-        <AppIcon name="rectangle.portrait.and.arrow.right" :size="18" />
-        {{ t('settings.signOut') }}
-      </AppButton>
+          <FieldRow
+            symbol="rectangle.portrait.and.arrow.right"
+            as="button"
+            :disabled="auth.isSigningOutEverywhere.value"
+            @click="isConfirmingSignOutEverywhere = true"
+          >
+            <span :class="auth.isSigningOutEverywhere.value ? 'secondary' : 'screen__danger'">
+              {{ t('settings.signOutEverywhere') }}
+            </span>
+            <span v-if="auth.isSigningOutEverywhere.value" class="screen__trailing">
+              <SpinnerDot />
+            </span>
+          </FieldRow>
+        </template>
+      </EraseDataCard>
+
+      <InlineMessage
+        v-if="auth.isSignedIn.value && auth.signOutEverywhereError.value"
+        kind="error"
+        :text="auth.signOutEverywhereError.value"
+      />
     </div>
+
+    <ConfirmDialog
+      :open="isConfirmingSignOutEverywhere"
+      :title="t('settings.signOutEverywhereTitle')"
+      :message="t('settings.signOutEverywhereMessage')"
+      :confirm-title="t('settings.signOutEverywhereConfirm')"
+      @confirm="signOutEverywhere"
+      @cancel="isConfirmingSignOutEverywhere = false"
+    />
 
     <SignInView v-if="isSigningIn" @close="isSigningIn = false" />
 
@@ -120,6 +163,20 @@ onMounted(() => {
   flex-direction: column;
   gap: var(--space-xl);
   padding: 0 var(--space-l) var(--space-xl);
+}
+
+.screen__action {
+  min-height: 36px;
+  padding: 0 var(--space-m);
+  font-size: 15px;
+}
+
+.screen__danger {
+  color: var(--danger);
+}
+
+.screen__trailing {
+  margin-left: auto;
 }
 
 .screen__select {

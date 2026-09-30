@@ -62,10 +62,13 @@ func dsn(path string) string {
 }
 
 func (r *Repository) UserByLogin(ctx context.Context, login string) (models.User, error) {
-	const query = "SELECT id, login, created_at FROM users WHERE login = ?"
+	return r.user(ctx, "SELECT id, login, password_hash, created_at FROM users WHERE login = ?", login)
+}
+
+func (r *Repository) user(ctx context.Context, query string, arg string) (models.User, error) {
 	var user models.User
 	var createdAt string
-	err := r.db.QueryRowContext(ctx, query, login).Scan(&user.ID, &user.Login, &createdAt)
+	err := r.db.QueryRowContext(ctx, query, arg).Scan(&user.ID, &user.Login, &user.PasswordHash, &createdAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return models.User{}, models.ErrNotFound
 	}
@@ -78,18 +81,46 @@ func (r *Repository) UserByLogin(ctx context.Context, login string) (models.User
 	return user, nil
 }
 
-func (r *Repository) CreateUser(ctx context.Context, login string) (models.User, error) {
+func (r *Repository) CreateUser(ctx context.Context, login, passwordHash string) (models.User, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return models.User{}, fmt.Errorf("repository: generate user id: %w", err)
 	}
 
-	user := models.User{ID: id.String(), Login: login, CreatedAt: time.Now().UTC()}
-	const query = "INSERT INTO users (id, login, created_at) VALUES (?, ?, ?)"
-	if _, err := r.db.ExecContext(ctx, query, user.ID, user.Login, user.CreatedAt.Format(timeLayout)); err != nil {
+	user := models.User{ID: id.String(), Login: login, PasswordHash: passwordHash, CreatedAt: time.Now().UTC()}
+	const query = "INSERT INTO users (id, login, password_hash, created_at) VALUES (?, ?, ?, ?)"
+	if _, err := r.db.ExecContext(ctx, query, user.ID, user.Login, user.PasswordHash, user.CreatedAt.Format(timeLayout)); err != nil {
 		return models.User{}, fmt.Errorf("repository: create user: %w", err)
 	}
 	return user, nil
+}
+
+func (r *Repository) CreateSession(ctx context.Context, userID, tokenHash string) error {
+	const query = "INSERT INTO sessions (token_hash, user_id, created_at) VALUES (?, ?, ?)"
+	if _, err := r.db.ExecContext(ctx, query, tokenHash, userID, time.Now().UTC().Format(timeLayout)); err != nil {
+		return fmt.Errorf("repository: create session: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) UserBySession(ctx context.Context, tokenHash string) (models.User, error) {
+	const query = `SELECT u.id, u.login, u.password_hash, u.created_at FROM sessions s
+		JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?`
+	return r.user(ctx, query, tokenHash)
+}
+
+func (r *Repository) DeleteSession(ctx context.Context, tokenHash string) error {
+	if _, err := r.db.ExecContext(ctx, "DELETE FROM sessions WHERE token_hash = ?", tokenHash); err != nil {
+		return fmt.Errorf("repository: delete session: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) DeleteUserSessions(ctx context.Context, userID string) error {
+	if _, err := r.db.ExecContext(ctx, "DELETE FROM sessions WHERE user_id = ?", userID); err != nil {
+		return fmt.Errorf("repository: delete user sessions: %w", err)
+	}
+	return nil
 }
 
 func (r *Repository) Account(ctx context.Context, userID, id string) (models.Account, error) {

@@ -18,6 +18,8 @@ var (
 	ErrInvalidSession = errors.New("usecase: invalid session")
 
 	ErrLoginTaken = errors.New("usecase: login already taken")
+
+	ErrWrongPassword = errors.New("usecase: wrong password")
 )
 
 const (
@@ -43,7 +45,12 @@ type Repository interface {
 	Ping(ctx context.Context) error
 
 	UserByLogin(ctx context.Context, login string) (models.User, error)
-	CreateUser(ctx context.Context, login string) (models.User, error)
+	CreateUser(ctx context.Context, login, passwordHash string) (models.User, error)
+
+	CreateSession(ctx context.Context, userID, tokenHash string) error
+	UserBySession(ctx context.Context, tokenHash string) (models.User, error)
+	DeleteSession(ctx context.Context, tokenHash string) error
+	DeleteUserSessions(ctx context.Context, userID string) error
 
 	Account(ctx context.Context, userID, id string) (models.Account, error)
 	Category(ctx context.Context, userID, id string) (models.Category, error)
@@ -91,45 +98,6 @@ type PullOutput struct {
 	Changes   models.Changes
 	NextSeq   int64
 	ServerSeq int64
-}
-
-func (u *Usecase) Login(ctx context.Context, login string) (models.User, error) {
-	user, err := u.repo.UserByLogin(ctx, models.NormalizeLogin(login))
-	if errors.Is(err, models.ErrNotFound) {
-		return models.User{}, ErrUnknownLogin
-	}
-	if err != nil {
-		return models.User{}, err
-	}
-	return user, nil
-}
-
-func (u *Usecase) Register(ctx context.Context, login string) (models.User, error) {
-	normalized := models.NormalizeLogin(login)
-
-	switch _, err := u.repo.UserByLogin(ctx, normalized); {
-	case err == nil:
-		return models.User{}, ErrLoginTaken
-	case !errors.Is(err, models.ErrNotFound):
-		return models.User{}, err
-	}
-
-	return u.repo.CreateUser(ctx, normalized)
-}
-
-func (u *Usecase) Authenticate(ctx context.Context, login string) (models.User, error) {
-	normalized := models.NormalizeLogin(login)
-	if normalized == "" {
-		return models.User{}, ErrInvalidSession
-	}
-	user, err := u.repo.UserByLogin(ctx, normalized)
-	if errors.Is(err, models.ErrNotFound) {
-		return models.User{}, ErrInvalidSession
-	}
-	if err != nil {
-		return models.User{}, err
-	}
-	return user, nil
 }
 
 func (u *Usecase) Pull(ctx context.Context, userID string, since int64, limit int) (PullOutput, error) {

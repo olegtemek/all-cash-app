@@ -73,13 +73,16 @@ export function isHealthy(dto: HealthResponseDTO): boolean {
 
 export interface LoginRequestDTO {
   login: string
+  password: string
 }
 
 export interface LoginResponseDTO {
   login: string
+  token: string
 }
 
 export interface RegisterResponseDTO {
   userId: string
   login: string
+  token: string
 }

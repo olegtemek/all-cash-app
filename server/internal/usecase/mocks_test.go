@@ -14,8 +14,12 @@ type repoMock struct {
 
 	pingFn func(ctx context.Context) error
 
-	userByLoginFn func(ctx context.Context, login string) (models.User, error)
-	createUserFn  func(ctx context.Context, login string) (models.User, error)
+	userByLoginFn        func(ctx context.Context, login string) (models.User, error)
+	createUserFn         func(ctx context.Context, login, passwordHash string) (models.User, error)
+	createSessionFn      func(ctx context.Context, userID, tokenHash string) error
+	userBySessionFn      func(ctx context.Context, tokenHash string) (models.User, error)
+	deleteSessionFn      func(ctx context.Context, tokenHash string) error
+	deleteUserSessionsFn func(ctx context.Context, userID string) error
 
 	accountFn         func(ctx context.Context, userID, id string) (models.Account, error)
 	categoryFn        func(ctx context.Context, userID, id string) (models.Category, error)
@@ -55,11 +59,39 @@ func (m *repoMock) UserByLogin(ctx context.Context, login string) (models.User, 
 	return m.userByLoginFn(ctx, login)
 }
 
-func (m *repoMock) CreateUser(ctx context.Context, login string) (models.User, error) {
+func (m *repoMock) CreateSession(ctx context.Context, userID, tokenHash string) error {
+	if m.createSessionFn == nil {
+		m.unexpected("CreateSession")
+	}
+	return m.createSessionFn(ctx, userID, tokenHash)
+}
+
+func (m *repoMock) UserBySession(ctx context.Context, tokenHash string) (models.User, error) {
+	if m.userBySessionFn == nil {
+		m.unexpected("UserBySession")
+	}
+	return m.userBySessionFn(ctx, tokenHash)
+}
+
+func (m *repoMock) DeleteSession(ctx context.Context, tokenHash string) error {
+	if m.deleteSessionFn == nil {
+		m.unexpected("DeleteSession")
+	}
+	return m.deleteSessionFn(ctx, tokenHash)
+}
+
+func (m *repoMock) DeleteUserSessions(ctx context.Context, userID string) error {
+	if m.deleteUserSessionsFn == nil {
+		m.unexpected("DeleteUserSessions")
+	}
+	return m.deleteUserSessionsFn(ctx, userID)
+}
+
+func (m *repoMock) CreateUser(ctx context.Context, login, passwordHash string) (models.User, error) {
 	if m.createUserFn == nil {
 		m.unexpected("CreateUser")
 	}
-	return m.createUserFn(ctx, login)
+	return m.createUserFn(ctx, login, passwordHash)
 }
 
 func (m *repoMock) Account(ctx context.Context, userID, id string) (models.Account, error) {

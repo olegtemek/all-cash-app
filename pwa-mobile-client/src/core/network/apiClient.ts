@@ -5,7 +5,7 @@ export interface APIRequest {
   method?: string
   path: string
   query?: Record<string, string>
-  login?: string
+  token?: string
   body?: unknown
 }
 
@@ -34,7 +34,7 @@ export class APIClient {
     const headers: Record<string, string> = {}
 
     if (request.body !== undefined) headers['Content-Type'] = 'application/json'
-    if (request.login) headers['X-Login'] = request.login
+    if (request.token) headers['Authorization'] = `Bearer ${request.token}`
 
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), requestTimeout)

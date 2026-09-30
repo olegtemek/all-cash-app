@@ -31,6 +31,8 @@ async function erase(): Promise<void> {
           <SpinnerDot />
         </span>
       </FieldRow>
+
+      <slot />
     </FormCard>
 
   </div>

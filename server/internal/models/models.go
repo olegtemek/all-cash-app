@@ -30,9 +30,15 @@ var Kinds = map[string]bool{KindExpense: true, KindIncome: true, KindDebt: true,
 var Currencies = map[string]bool{"KZT": true, "USD": true, "CNY": true, "RUB": true}
 
 var Colors = map[string]bool{
-	"red": true, "orange": true, "yellow": true, "green": true,
-	"mint": true, "teal": true, "blue": true, "indigo": true,
-	"purple": true, "pink": true, "brown": true, "graphite": true,
+	"redLight": true, "red": true, "redDark": true, "orangeLight": true,
+	"orange": true, "orangeDark": true, "yellow": true, "yellowDark": true,
+	"greenLight": true, "green": true, "greenDark": true, "mint": true,
+	"mintDark": true, "tealLight": true, "teal": true, "tealDark": true,
+	"blueLight": true, "blue": true, "blueDark": true, "indigoLight": true,
+	"indigo": true, "indigoDark": true, "purpleLight": true, "purple": true,
+	"purpleDark": true, "pinkLight": true, "pink": true, "pinkDark": true,
+	"brownLight": true, "brown": true, "brownDark": true, "graphiteLight": true,
+	"graphite": true, "graphiteDark": true,
 }
 
 var DebtDirections = map[string]bool{DebtGiven: true, DebtTaken: true}
@@ -44,9 +50,10 @@ const (
 )
 
 type User struct {
-	ID        string
-	Login     string
-	CreatedAt time.Time
+	ID           string
+	Login        string
+	PasswordHash string
+	CreatedAt    time.Time
 }
 
 type Account struct {
