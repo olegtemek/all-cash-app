@@ -2,7 +2,9 @@
 import { t } from '@/core/i18n'
 import { computed, ref } from 'vue'
 import EmptyState from '@/design/EmptyState.vue'
+import LoadMoreSentinel from '@/design/LoadMoreSentinel.vue'
 import SheetView from '@/design/SheetView.vue'
+import { useIncrementalGroups } from '@/design/incrementalList'
 import OperationRow from '@/features/operations/OperationRow.vue'
 import OperationDetailSheet from '@/features/operations/OperationDetailSheet.vue'
 import { AnalyticsPeriod, operationsWording, periodInSentence, shareTitle, uncategorizedName } from '@/core/model/analytics'
@@ -18,7 +20,10 @@ const spending = computed(() =>
   store.expenseReport(props.period, props.currency).categories.find((item) => item.id === props.categoryId) ?? null
 )
 
-const days = computed(() => store.expenseDays(props.categoryId, props.period, props.currency))
+const allDays = computed(() => store.expenseDays(props.categoryId, props.period, props.currency))
+const { visible: days, hasMore, showMore } = useIncrementalGroups(allDays, {
+  resetOn: () => [props.categoryId, props.period.id, props.currency]
+})
 </script>
 
 <template>
@@ -58,6 +63,8 @@ const days = computed(() => store.expenseDays(props.categoryId, props.period, pr
           </button>
         </div>
       </section>
+
+      <LoadMoreSentinel v-if="hasMore" @visible="showMore" />
     </div>
 
     <OperationDetailSheet v-if="selectedID" :operation-id="selectedID" @close="selectedID = null" />

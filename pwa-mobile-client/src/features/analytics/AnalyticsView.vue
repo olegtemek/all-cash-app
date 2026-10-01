@@ -6,11 +6,13 @@ import AppIcon from '@/design/AppIcon.vue'
 import EmptyState from '@/design/EmptyState.vue'
 import FormCard from '@/design/FormCard.vue'
 import FormDivider from '@/design/FormDivider.vue'
+import LoadMoreSentinel from '@/design/LoadMoreSentinel.vue'
 import LoadingView from '@/design/LoadingView.vue'
 import ScreenHeader from '@/design/ScreenHeader.vue'
 import SegmentedControl from '@/design/SegmentedControl.vue'
 import CategoryOperationsView from './CategoryOperationsView.vue'
 import SpendingDonut from './SpendingDonut.vue'
+import { useIncrementalList } from '@/design/incrementalList'
 import { AnalyticsPeriod, operationsWording, periodInSentence, shareTitle } from '@/core/model/analytics'
 import { formatBalance, preferredCurrency, type CurrencyCode } from '@/core/model/money'
 import { paletteVar } from '@/core/model/palette'
@@ -33,6 +35,12 @@ const currency = computed<CurrencyCode>(() => {
 })
 
 const report = computed(() => store.expenseReport(period.value, currency.value))
+const reportCategories = computed(() => report.value.categories)
+const {
+  visible: visibleCategories,
+  hasMore: hasMoreCategories,
+  showMore: showMoreCategories
+} = useIncrementalList(reportCategories, { resetOn: () => [period.value.id, currency.value] })
 
 const earliestPeriod = computed(() => {
   const range = store.operationDateRange.value
@@ -155,7 +163,7 @@ onMounted(() => {
         <SpendingDonut :categories="report.categories" />
 
         <FormCard :title="t('common.categories')">
-          <template v-for="(spending, index) in report.categories" :key="spending.id">
+          <template v-for="(spending, index) in visibleCategories" :key="spending.id">
             <FormDivider v-if="index > 0" />
 
             <button type="button" class="spending" @click="openCategoryID = spending.id">
@@ -177,6 +185,8 @@ onMounted(() => {
               <AppIcon name="chevron.right" :size="14" class="tertiary" />
             </button>
           </template>
+
+          <LoadMoreSentinel v-if="hasMoreCategories" @visible="showMoreCategories" />
         </FormCard>
       </div>
     </template>

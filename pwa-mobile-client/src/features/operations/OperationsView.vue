@@ -8,6 +8,8 @@ import ScreenHeader from '@/design/ScreenHeader.vue'
 import SwipeRow from '@/design/SwipeRow.vue'
 import type { SwipeAction } from '@/design/swipeAction'
 import AppButton from '@/design/AppButton.vue'
+import LoadMoreSentinel from '@/design/LoadMoreSentinel.vue'
+import { useIncrementalGroups } from '@/design/incrementalList'
 import OperationRow from './OperationRow.vue'
 import OperationDetailSheet from './OperationDetailSheet.vue'
 import OperationFormScreen from './OperationFormScreen.vue'
@@ -20,7 +22,7 @@ const editingID = ref<string | null>(null)
 const selectedID = ref<string | null>(null)
 
 const phase = store.phase
-const days = store.days
+const { visible: days, hasMore, showMore } = useIncrementalGroups(store.days)
 
 const deletionMessage = computed(() =>
   pendingDeletion.value ? deletionWarning(pendingDeletion.value.id, store, pendingDeletion.value.title) : ''
@@ -94,6 +96,8 @@ async function confirmDeletion(): Promise<void> {
           </SwipeRow>
         </div>
       </section>
+
+      <LoadMoreSentinel v-if="hasMore" @visible="showMore" />
     </div>
 
     <OperationDetailSheet
