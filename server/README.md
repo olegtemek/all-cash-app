@@ -49,7 +49,7 @@ CGO_ENABLED=0 go build -o bin/server ./cmd/server
 
 ```sh
 docker compose up -d          # таблицы создаёт server при старте
-docker compose logs -f server
+docker compose logs -f app
 docker compose down           # каталог data с базой остаётся
 ```
 
@@ -87,12 +87,14 @@ ALL_CASH_DOCKER_USER=$(id -u):$(id -g)
 
 ### Docker без Compose
 
-```sh
-docker build -t all-cash-server .
-docker run -d --env-file .env -p 192.168.1.10:8000:8000 -v "$PWD/data:/app/data" all-cash-server
-```
+Образ общий для сервера и веб-клиента, `Dockerfile` лежит в корне репозитория:
+API слушает 8000, nginx со статикой PWA — 8080.
 
-Публикация порта в виде `-p 8000:8000` привязывает его ко всем интерфейсам хоста —
+```sh
+cd ..
+docker build -t all-cash .
+docker run -d --env-file .env -p 192.168.1.10:8000:8000 -p 192.168.1.10:8081:8080 -v "$PWD/data:/app/data" all-cash
+```Публикация порта в виде `-p 8000:8000` привязывает его ко всем интерфейсам хоста —
 указывайте адрес явно.
 
 ## Схема базы
