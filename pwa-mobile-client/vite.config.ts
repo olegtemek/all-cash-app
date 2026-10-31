@@ -19,7 +19,7 @@ export default defineConfig({
         background_color: '#f2f2f7',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/all-cash',
+        start_url: '/',
         scope: '/',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
