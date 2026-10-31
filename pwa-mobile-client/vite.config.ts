@@ -11,15 +11,15 @@ export default defineConfig({
       devOptions: { enabled: true },
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'AllCash',
-        short_name: 'AllCash',
+        name: 'all-cash',
+        short_name: 'all-cash',
         description: 'Личные финансы: операции, счета, долги и аналитика',
         lang: 'ru',
         theme_color: '#0b0b0f',
         background_color: '#f2f2f7',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
+        start_url: '/all-cash',
         scope: '/',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
